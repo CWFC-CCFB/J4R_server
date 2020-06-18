@@ -49,7 +49,9 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static final String FIRSTCALL = "-firstcall";
 	
 	private static final String PORT = "-port";
-	
+
+	private static final String WD = "-wd";
+
 	private static final String MEMORY = "-mem";
 
 	public static final String MainSplitter = "/;";
@@ -724,7 +726,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 					newCommands.add(PORT);
 					newCommands.add(port);
 				}
-				
+
+				String wd = J4RSystem.retrieveArgument(WD, arguments);
+				newCommands.add(WD);
+				newCommands.add(wd);
+
 				String memorySizeStr = J4RSystem.retrieveArgument(MEMORY, arguments);
 				Integer memorySize = null;
 				if (memorySizeStr != null) {
@@ -760,6 +766,9 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			}
 			server = new JavaLocalGatewayServer(new ServerConfiguration(port), new REnvironment());
 			server.startApplication();
+			String wd = J4RSystem.retrieveArgument(WD, arguments);
+			File file = new File(wd.trim() + File.separator + "J4RTmpFile");
+			file.createNewFile();
 		} catch (Exception e) {
 			System.exit(1);
 		}

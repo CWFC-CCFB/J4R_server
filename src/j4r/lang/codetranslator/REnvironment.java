@@ -766,9 +766,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			}
 			server = new JavaLocalGatewayServer(new ServerConfiguration(port), new REnvironment());
 			server.startApplication();
-			String wd = J4RSystem.retrieveArgument(WD, arguments);
-			File file = new File(wd.trim() + File.separator + "J4RTmpFile");
-			file.createNewFile();
+			try {
+				String wd = J4RSystem.retrieveArgument(WD, arguments);
+				File file = new File(wd.trim() + File.separator + "J4RTmpFile");
+				file.createNewFile();
+			} catch (Exception e) {}
 		} catch (Exception e) {
 			System.exit(1);
 		}

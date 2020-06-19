@@ -45,7 +45,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * This internal class handles the calls and stores these in the queue.
 	 * @author Mathieu Fortin
 	 */
-	private class CallReceiverThread extends Thread {
+	class CallReceiverThread extends Thread {
 
 		private boolean shutdownCall;
 		protected final ServerSocket serverSocket;
@@ -96,7 +96,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	private ArrayList<ClientThread> clientThreads;
 	protected final LinkedBlockingQueue<SocketWrapper> clientQueue;
-	private CallReceiverThread callReceiver;
+	protected final CallReceiverThread callReceiver;
 	
 	protected final boolean isCallerAJavaApplication;
 	
@@ -191,6 +191,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	@Override
 	protected void firstTasksToDo() {
 		addTask(new ServerTask(ServerTaskID.StartReceiverThread, this));
+		if (configuration.isLocalServer()) {
+			addTask(new ServerTask(ServerTaskID.CreateFileInfo, this));
+		}
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -241,9 +244,13 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		}
 		super.requestShutdown();
 	}
+
+
+	/*
+	 * This method can be overriden and left empty for webserver.
+	 * @throws IOException
+	 */
+	protected abstract void createFileInfoForLocalServer() throws IOException;
 	
-
-
-
 
 }

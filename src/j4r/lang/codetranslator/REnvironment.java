@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import j4r.lang.J4RSystem;
@@ -49,6 +50,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static final String FIRSTCALL = "-firstcall";
 	
 	private static final String PORT = "-port";
+	
+	private static final String BACKDOORPORT = "-backdoorport";
 
 	private static final String WD = "-wd";
 
@@ -204,6 +207,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static String SynchronizeEnvironment = "sync";
 	private static String FieldCode = "field";
 
+	private static final Random RANDOM = new Random();
 	
 
 	
@@ -363,6 +367,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 	}
 
+	private static int generateSecurityKey() {
+		return RANDOM.nextInt();
+	}
+	
+	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object processMethod(String[] requestStrings) throws Exception {
 		Class clazz = null;
@@ -690,6 +699,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	}
 
 	
+	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server.
 	 * @param args
@@ -762,15 +772,18 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			if (portStr != null) {
 				port = Integer.parseInt(portStr);
 			} else {
-				port = 18011;		// default port
+				port = 0;		// default random port
 			}
-			server = new JavaLocalGatewayServer(new ServerConfiguration(port), new REnvironment());
+			String backdoorportStr = J4RSystem.retrieveArgument(BACKDOORPORT, arguments);
+			int backdoorport;
+			if (backdoorportStr != null) {
+				backdoorport = Integer.parseInt(backdoorportStr);
+			} else {
+				backdoorport = 0;		// default random port
+			}
+			ServerConfiguration conf = new ServerConfiguration(port, generateSecurityKey(), backdoorport, J4RSystem.retrieveArgument(WD, arguments));
+			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
-			try {
-				String wd = J4RSystem.retrieveArgument(WD, arguments);
-				File file = new File(wd.trim() + File.separator + "J4RTmpFile");
-				file.createNewFile();
-			} catch (Exception e) {}
 		} catch (Exception e) {
 			System.exit(1);
 		}

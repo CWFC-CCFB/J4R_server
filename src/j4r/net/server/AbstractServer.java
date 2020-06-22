@@ -39,7 +39,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	protected static enum ServerReply {IAmBusyCallBackLater, 
 		CallAccepted, 
 		ClosingConnection,
-		RequestReceivedAndProcessed,
+		Done,
 		SecurityChecked,
 		SecurityFailed}
 

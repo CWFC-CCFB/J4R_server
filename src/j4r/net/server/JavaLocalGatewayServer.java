@@ -140,7 +140,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 									socketWrapper.writeObject(somethingInParticular);
 								}
 							} else {
-								socketWrapper.writeObject(ServerReply.RequestReceivedAndProcessed);
+								socketWrapper.writeObject(ServerReply.Done);
 							}
 						} catch (Exception e) {		// something wrong happened during the processing of the request
 							try {

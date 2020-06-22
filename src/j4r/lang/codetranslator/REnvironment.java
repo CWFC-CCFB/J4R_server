@@ -60,7 +60,22 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	public static final String MainSplitter = "/;";
 	
 	public static final String SubSplitter = "/,";
-
+	
+//	private static final String R_NUMERIC_TOKEN = "numeric";
+//	private static final String R_INTEGER_TOKEN = "integer";
+//	private static final String R_LOGICAL_TOKEN = "logical";
+//	private static final String R_CHARACTER_TOKEN = "character";
+//	private static final String R_JAVA_OBJECT_TOKEN = "JavaObject";
+//	private static final String R_JAVA_LIST_TOKEN = "JavaList";
+	
+	private static final String R_NUMERIC_TOKEN = "nu";
+	private static final String R_INTEGER_TOKEN = "in";
+	private static final String R_LOGICAL_TOKEN = "lo";
+	private static final String R_CHARACTER_TOKEN = "ch";
+	private static final String R_JAVA_OBJECT_TOKEN = "JO";
+	private static final String R_JAVA_LIST_TOKEN = "JL";
+	
+	
 	private final static Map<String, Class<?>> PrimitiveTypeMap = new HashMap<String, Class<?>>();
 	static {
 		PrimitiveTypeMap.put("integer", int.class);
@@ -112,11 +127,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		
 		@Override
 		public String toString() {
-			String output = "JavaList" + MainSplitter;
+			String output = R_JAVA_LIST_TOKEN + MainSplitter;
 			for (ParameterWrapper obj : this) {
 				String toBeAdded = obj.toString();
-				if (toBeAdded.startsWith("JavaObject" + MainSplitter)) {
-					toBeAdded = toBeAdded.substring(("JavaObject" + MainSplitter).length());
+				if (toBeAdded.startsWith(R_JAVA_OBJECT_TOKEN + MainSplitter)) {
+					toBeAdded = toBeAdded.substring((R_JAVA_OBJECT_TOKEN + MainSplitter).length());
 				}
 				output = output + toBeAdded + SubSplitter;	
 			}
@@ -166,13 +181,13 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		public String toString() {
 			if (ReflectUtility.JavaWrapperToPrimitiveMap.containsKey(type)) {
 				if (type.equals(Double.class) || type.equals(Float.class)) {
-					return "numeric" + ((Number) value).toString();
+					return R_NUMERIC_TOKEN + ((Number) value).toString();
 				} else if (type.equals(Integer.class) || type.equals(Long.class)) {
-					return "integer" + ((Number) value).toString();
+					return R_INTEGER_TOKEN + ((Number) value).toString();
 				} else if (type.equals(Boolean.class)) {
-					return "logical" + ((Boolean) value).toString();
+					return R_LOGICAL_TOKEN + ((Boolean) value).toString();
 				} else {
-					return "character" + value.toString();
+					return R_CHARACTER_TOKEN + value.toString();
 				}
 			} else {
 				String className = type.getName();
@@ -181,7 +196,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				} else if (className.endsWith(MainSplitter)) {
 					className = className.substring(0, className.length() - MainSplitter.length());
 				}
-				return "JavaObject" + MainSplitter + className + "@" + System.identityHashCode(value);
+				return R_JAVA_OBJECT_TOKEN + MainSplitter + className + "@" + System.identityHashCode(value);
 			}
 		}
 	}
@@ -199,10 +214,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 
 	
 		
-	private static String ConstructCode = "create";
-	private static String ConstructNullCode = "createnull";
-	private static String ConstructArrayCode = "createarray";
-	private static String ConstructNullArrayCode = "createnullarray";
+	private static String ConstructCode = "c";
+	private static String ConstructNullCode = "cnu";
+	private static String ConstructArrayCode = "carr";
+	private static String ConstructNullArrayCode = "cnarr";
 	private static String MethodCode = "method";
 	private static String SynchronizeEnvironment = "sync";
 	private static String FieldCode = "field";

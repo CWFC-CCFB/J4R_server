@@ -39,6 +39,14 @@ import j4r.net.server.BasicClient.ClientRequest;
 public class JavaLocalGatewayServer extends AbstractServer {
 	
 	
+	public static final String EXTENSION = "-ext";
+	public static final String PORT = "-ports"; 
+	public static final String BACKDOORPORT = "-backdoorport";
+	public static final String NB_PORTS = "-nbports";
+	public static final String WD = "-wd";
+	public static final String MEMORY = "-mem";
+	public static final String PortSplitter = ":";
+
 	class BackDoorThread extends Thread {
 		
 		private final ServerSocket emergencySocket;
@@ -253,7 +261,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		String realizedListeningPorts = "";
 		for (CallReceiverThread t : callReceiverThreads) {
 			if (!realizedListeningPorts.isEmpty()) {
-				realizedListeningPorts += ",";
+				realizedListeningPorts += PortSplitter;
 			}
 			realizedListeningPorts += t.serverSocket.getLocalPort();
 		}

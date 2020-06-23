@@ -45,23 +45,13 @@ import j4r.net.server.ServerConfiguration;
 public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 
 
-	private static final String EXTENSION = "-ext";
 	
 	private static final String FIRSTCALL = "-firstcall";
 	
-	private static final String PORT = "-ports";
-
-	private static final String BACKDOORPORT = "-backdoorport";
-
-	private static final String NB_PORTS = "-nbports";
-
-	private static final String WD = "-wd";
-
-	private static final String MEMORY = "-mem";
-
 	public static final String MainSplitter = "/;";
 	
 	public static final String SubSplitter = "/,";
+	
 	
 //	private static final String R_NUMERIC_TOKEN = "numeric";
 //	private static final String R_INTEGER_TOKEN = "integer";
@@ -735,7 +725,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				} else {
 					classPath = "j4r.jar";
 				}
-				String extensionPath = J4RSystem.retrieveArgument(EXTENSION, arguments);
+				String extensionPath = J4RSystem.retrieveArgument(JavaLocalGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
 					if (new File(extensionPath).exists()) {
 						String classPathSeparator = ":";
@@ -746,28 +736,28 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 					}
 				}
 				
-				String port = J4RSystem.retrieveArgument(PORT, arguments);
+				String port = J4RSystem.retrieveArgument(JavaLocalGatewayServer.PORT, arguments);
 				if (port != null) {
-					newCommands.add(PORT);
+					newCommands.add(JavaLocalGatewayServer.PORT);
 					newCommands.add(port);
 				} else {
-					String nbPorts = J4RSystem.retrieveArgument(NB_PORTS, arguments);
+					String nbPorts = J4RSystem.retrieveArgument(JavaLocalGatewayServer.NB_PORTS, arguments);
 					if (nbPorts == null) { // make sure there is at least one port
-						newCommands.add(NB_PORTS);
+						newCommands.add(JavaLocalGatewayServer.NB_PORTS);
 						newCommands.add("1");
 					} else {
-						newCommands.add(NB_PORTS);
+						newCommands.add(JavaLocalGatewayServer.NB_PORTS);
 						newCommands.add(nbPorts);
 					}
 				}
 			
 				
 
-				String wd = J4RSystem.retrieveArgument(WD, arguments);
-				newCommands.add(WD);
+				String wd = J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments);
+				newCommands.add(JavaLocalGatewayServer.WD);
 				newCommands.add(wd);
 
-				String memorySizeStr = J4RSystem.retrieveArgument(MEMORY, arguments);
+				String memorySizeStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.MEMORY, arguments);
 				Integer memorySize = null;
 				if (memorySizeStr != null) {
 					try {
@@ -793,16 +783,16 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				rGatewayProcessWrapper.run();
 				System.exit(0);
 			}
-			String portStr = J4RSystem.retrieveArgument(PORT, arguments);
+			String portStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.PORT, arguments);
 			int[] listeningPorts;
 			if (portStr != null) {
-				String[] p = portStr.split(",");
+				String[] p = portStr.split(JavaLocalGatewayServer.PortSplitter);
 				listeningPorts = new int[p.length];
 				for (int i = 0; i < p.length; i++) {
 					listeningPorts[i] = Integer.parseInt(p[i]);
 				}
 			} else {
-				String nbPortsStr = J4RSystem.retrieveArgument(NB_PORTS, arguments);
+				String nbPortsStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.NB_PORTS, arguments);
 				int nbPorts;
 				if (nbPortsStr == null) {
 					nbPorts = 1;
@@ -811,14 +801,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				}
 				listeningPorts = new int[nbPorts];
 			}
-			String backdoorportStr = J4RSystem.retrieveArgument(BACKDOORPORT, arguments);
+			String backdoorportStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.BACKDOORPORT, arguments);
 			int backdoorport;
 			if (backdoorportStr != null) {
 				backdoorport = Integer.parseInt(backdoorportStr);
 			} else {
 				backdoorport = 0;		// default random port
 			}
-			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorport, generateSecurityKey(), J4RSystem.retrieveArgument(WD, arguments));
+			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorport, generateSecurityKey(), J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments));
 			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
 		} catch (Exception e) {

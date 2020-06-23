@@ -49,9 +49,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	
 	private static final String FIRSTCALL = "-firstcall";
 	
-	private static final String PORT = "-port";
-	
+	private static final String PORT = "-ports";
+
 	private static final String BACKDOORPORT = "-backdoorport";
+
+	private static final String NB_PORTS = "-nbports";
 
 	private static final String WD = "-wd";
 
@@ -211,8 +213,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 		
 	}
-
-	
 		
 	private static String ConstructCode = "c";
 	private static String ConstructNullCode = "cnu";
@@ -750,7 +750,18 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				if (port != null) {
 					newCommands.add(PORT);
 					newCommands.add(port);
+				} else {
+					String nbPorts = J4RSystem.retrieveArgument(NB_PORTS, arguments);
+					if (nbPorts == null) { // make sure there is at least one port
+						newCommands.add(NB_PORTS);
+						newCommands.add("1");
+					} else {
+						newCommands.add(NB_PORTS);
+						newCommands.add(nbPorts);
+					}
 				}
+			
+				
 
 				String wd = J4RSystem.retrieveArgument(WD, arguments);
 				newCommands.add(WD);
@@ -783,11 +794,22 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				System.exit(0);
 			}
 			String portStr = J4RSystem.retrieveArgument(PORT, arguments);
-			int port;
+			int[] listeningPorts;
 			if (portStr != null) {
-				port = Integer.parseInt(portStr);
+				String[] p = portStr.split(",");
+				listeningPorts = new int[p.length];
+				for (int i = 0; i < p.length; i++) {
+					listeningPorts[i] = Integer.parseInt(p[i]);
+				}
 			} else {
-				port = 0;		// default random port
+				String nbPortsStr = J4RSystem.retrieveArgument(NB_PORTS, arguments);
+				int nbPorts;
+				if (nbPortsStr == null) {
+					nbPorts = 1;
+				} else {
+					nbPorts = Integer.parseInt(nbPortsStr);
+				}
+				listeningPorts = new int[nbPorts];
 			}
 			String backdoorportStr = J4RSystem.retrieveArgument(BACKDOORPORT, arguments);
 			int backdoorport;
@@ -796,7 +818,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			} else {
 				backdoorport = 0;		// default random port
 			}
-			ServerConfiguration conf = new ServerConfiguration(port, generateSecurityKey(), backdoorport, J4RSystem.retrieveArgument(WD, arguments));
+			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorport, generateSecurityKey(), J4RSystem.retrieveArgument(WD, arguments));
 			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
 		} catch (Exception e) {

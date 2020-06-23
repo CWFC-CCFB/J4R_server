@@ -226,7 +226,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		super(servConf, false);
 		this.translator = translator;
 		this.shutdownOnClosedConnection = shutdownOnClosedConnection;
-		backdoorThread = new BackDoorThread(servConf.innerPort);
+		backdoorThread = new BackDoorThread(servConf.internalPort);
 	}
 
 	@Override
@@ -250,7 +250,16 @@ public class JavaLocalGatewayServer extends AbstractServer {
 	protected void createFileInfoForLocalServer() throws IOException {
 		String filename = getConfiguration().wd.trim() + File.separator + "J4RTmpFile";
 		File file = new File(filename);
-		String outputStr = "" + this.callReceiver.serverSocket.getLocalPort() + ";" + getConfiguration().key + ";" + backdoorThread.emergencySocket.getLocalPort();
+		String realizedListeningPorts = "";
+		for (CallReceiverThread t : callReceiverThreads) {
+			if (!realizedListeningPorts.isEmpty()) {
+				realizedListeningPorts += ",";
+			}
+			realizedListeningPorts += t.serverSocket.getLocalPort();
+		}
+		String outputStr = "" + getConfiguration().key + ";" + 
+				backdoorThread.emergencySocket.getLocalPort() + ";" + 
+				realizedListeningPorts; 
 		FileWriter writer = new FileWriter(file);
 		writer.write(outputStr);
 		writer.close();

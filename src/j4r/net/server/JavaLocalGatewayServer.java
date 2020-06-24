@@ -46,6 +46,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 	public static final String WD = "-wd";
 	public static final String MEMORY = "-mem";
 	public static final String PortSplitter = ":";
+	public static final String DEBUG = "-debug";
 
 	class BackDoorThread extends Thread {
 		
@@ -121,8 +122,8 @@ public class JavaLocalGatewayServer extends AbstractServer {
 	
 	private class JavaGatewayClientThread extends ClientThread {
 
-		protected JavaGatewayClientThread(AbstractServer caller, int workerID) {
-			super(caller, workerID);
+		protected JavaGatewayClientThread(AbstractServer.CallReceiverThread receiver, int workerID) {
+			super(receiver, workerID);
 		}
 
 		@Override
@@ -130,7 +131,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 			while(true) {
 				try {
 					firePropertyChange("status", null, "Waiting");
-					socketWrapper = caller.getWaitingClients();
+					socketWrapper = receiver.clientQueue.take();
 					InetAddress clientAddress = socketWrapper.getInetAddress();
 					firePropertyChange("status", null, "Connected to client: " + clientAddress.getHostAddress());		// for TCP the client is known for UDP we are not connected yet TODO: find a way to lock the UDP socket until the connection is set
 					
@@ -142,7 +143,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 										|| somethingInParticular.equals(BasicClient.ClientRequest.closeConnection.name())) {
 									socketWrapper.writeObject(ServerReply.ClosingConnection);
 									closeSocket();
-									caller.requestShutdown();
+									JavaLocalGatewayServer.this.requestShutdown();
 									break;
 								} else {
 									socketWrapper.writeObject(somethingInParticular);
@@ -165,7 +166,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 						}
 					}
 					if (JavaLocalGatewayServer.this.shutdownOnClosedConnection) {
-						caller.requestShutdown();
+						JavaLocalGatewayServer.this.requestShutdown();
 						break;
 					}
 				} catch (InterruptedException e) {
@@ -209,16 +210,16 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		this(servConf, translator, true); // true: the server shuts down when the connection is lost
 	}
 
-	/**
-	 * This method waits until the head of the queue is non null and returns the socket.
-	 * @return a Socket instance
-	 * @throws InterruptedException 
-	 */
-	@Override
-	protected synchronized SocketWrapper getWaitingClients() throws InterruptedException {
-		SocketWrapper socket = clientQueue.take();
-		return socket;
-	}
+//	/**
+//	 * This method waits until the head of the queue is non null and returns the socket.
+//	 * @return a Socket instance
+//	 * @throws InterruptedException 
+//	 */
+//	@Override
+//	protected synchronized SocketWrapper getWaitingClients() throws InterruptedException {
+//		SocketWrapper socket = clientQueue.take();
+//		return socket;
+//	}
 
 	
 	
@@ -238,8 +239,8 @@ public class JavaLocalGatewayServer extends AbstractServer {
 	}
 
 	@Override
-	protected ClientThread createClientThread(AbstractServer server, int id) {
-		return new JavaGatewayClientThread(server, id);
+	protected ClientThread createClientThread(AbstractServer.CallReceiverThread receiver, int id) {
+		return new JavaGatewayClientThread(receiver, id);
 	}
 
 	

@@ -33,7 +33,7 @@ public class ServerConfiguration implements Serializable {
 	private static final int MIN_PORT = 1024;
 	private static final int MAX_PORT = 65535;
 	
-	protected final int numberOfClientThreads;
+	protected final int numberOfClientThreadsPerReceiver;
 	protected final int maxSizeOfWaitingList;
 	protected final int[] listiningPorts;
 	protected final int internalPort;
@@ -44,22 +44,22 @@ public class ServerConfiguration implements Serializable {
 	
 	/**
 	 * Constructor. 
-	 * @param numberOfClientThreads number of threads that can answer calls.
+	 * @param numberOfClientThreadsPerReceiver number of threads that can answer calls.
 	 * @param maxSizeOfWaitingList number of pending calls
 	 * @param listeningPort port on which the server exchange the information with the clients
 	 * @param internalPort port on which the server can be accessed (backdoor port)
 	 */
-	public ServerConfiguration(int numberOfClientThreads, int maxSizeOfWaitingList, int[] listeningPorts, int internalPort) {
-		this(listeningPorts, internalPort, numberOfClientThreads, maxSizeOfWaitingList, false, -1, null);
+	public ServerConfiguration(int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, int[] listeningPorts, int internalPort) {
+		this(listeningPorts, internalPort, numberOfClientThreadsPerReceiver, maxSizeOfWaitingList, false, -1, null);
 	}
 
 	
-	private ServerConfiguration(int[] listeningPorts, int internalPort, int numberOfClientThreads, int maxSizeOfWaitingList, boolean isLocal, int key, String wd) {
+	private ServerConfiguration(int[] listeningPorts, int internalPort, int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, boolean isLocal, int key, String wd) {
 		this.isLocal = isLocal;
-		if (numberOfClientThreads < 0 || numberOfClientThreads > 10) {
+		if (numberOfClientThreadsPerReceiver < 0 || numberOfClientThreadsPerReceiver > 10) {
 			throw new InvalidParameterException("Number of client threads should be between 1 and 10!"); 
 		} else {
-			this.numberOfClientThreads = numberOfClientThreads;
+			this.numberOfClientThreadsPerReceiver = numberOfClientThreadsPerReceiver;
 		}
 		if (listeningPorts == null) {
 			throw new InvalidParameterException("The listeningPorts argument cannot be set to null!");

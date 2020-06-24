@@ -52,6 +52,8 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 		private boolean shutdownCall;
 		final ServerSocket serverSocket;
+		final LinkedBlockingQueue<SocketWrapper> clientQueue;
+		final int id;
 		
 		/**
 		 * General constructor. 
@@ -59,10 +61,12 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		 * @param clientQueue
 		 * @param maxNumberOfWaitingClients
 		 */
-		private CallReceiverThread(ServerSocket serverSocket) {
+		private CallReceiverThread(ServerSocket serverSocket, int id) {
 			this.serverSocket = serverSocket;
+			this.id = id;
+			clientQueue = new LinkedBlockingQueue<SocketWrapper>();
 			shutdownCall = false;
-			setName("Answering calls thread (non-daemon)");
+			setName("Answering call thread " + this.id);
 		}
 		
 		/*
@@ -97,7 +101,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 
 	private ArrayList<ClientThread> clientThreads;
-	protected final LinkedBlockingQueue<SocketWrapper> clientQueue;
+//	protected final LinkedBlockingQueue<SocketWrapper> clientQueue;
 	protected final List<CallReceiverThread> callReceiverThreads;
 	
 	protected final boolean isCallerAJavaApplication;
@@ -116,15 +120,18 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		this.configuration = configuration;
 		this.isCallerAJavaApplication = isCallerAJavaApplication;
 		clientThreads = new ArrayList<ClientThread>();
-		clientQueue = new LinkedBlockingQueue<SocketWrapper>();
+//		clientQueue = new LinkedBlockingQueue<SocketWrapper>();
 		callReceiverThreads = new ArrayList<CallReceiverThread>();
 		try {
 			List<ServerSocket> serverSockets = configuration.createServerSockets();
+			int i = 1;
 			for (ServerSocket ss : serverSockets) {
-				callReceiverThreads.add(new CallReceiverThread(ss));
-			}
-			for (int i = 0; i < configuration.numberOfClientThreads; i++) {
-				clientThreads.add(createClientThread(this, i + 1));		// i + 1 serves as id
+				CallReceiverThread crt = new CallReceiverThread(ss, i);
+				callReceiverThreads.add(crt);
+				for (int j = 1; j <= configuration.numberOfClientThreadsPerReceiver; j++) {
+					clientThreads.add(createClientThread(crt, i * 1000 + j));		// i + 1 serves as id
+				}
+				i++;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -160,18 +167,18 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	}
 
 
-	protected abstract ClientThread createClientThread(AbstractServer server, int id);
+	protected abstract ClientThread createClientThread(CallReceiverThread receiverThread, int id);
 		
 
-	/**
-	 * This method waits until the head of the queue is non null and returns the socket.
-	 * @return a Socket instance
-	 * @throws InterruptedException 
-	 */
-	protected synchronized SocketWrapper getWaitingClients() throws InterruptedException {
-		SocketWrapper socket = clientQueue.take();
-		return socket;
-	}
+//	/**
+//	 * This method waits until the head of the queue is non null and returns the socket.
+//	 * @return a Socket instance
+//	 * @throws InterruptedException 
+//	 */
+//	protected synchronized SocketWrapper getWaitingClients() throws InterruptedException {
+//		SocketWrapper socket = clientQueue.take();
+//		return socket;
+//	}
 
 	/**
 	 * This method starts the worker thread, which listens to the clients in the queue.
@@ -263,7 +270,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	public void requestShutdown() {
 		for (CallReceiverThread t : callReceiverThreads) {
 			t.shutdownCall = true;
-			clientQueue.clear();
+			t.clientQueue.clear();
 			try {
 				if (t.serverSocket != null) {
 					t.serverSocket.close();

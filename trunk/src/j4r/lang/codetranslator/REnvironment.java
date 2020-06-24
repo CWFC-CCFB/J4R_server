@@ -217,6 +217,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 
 	
 	public Object processCode(String request) throws Exception {
+//		return null;
 		String[] requestStrings = request.split(MainSplitter);
 		if (requestStrings[0].startsWith(ConstructCode)) {	// can be either create, createarray or createnull here
 			return createObjectFromRequestStrings(requestStrings); 
@@ -233,7 +234,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				throw new InvalidParameterException("Request unknown! " + request);
 			}
 		}
-
 	}
 	
 	private Object synchronizeEnvironment(String[] requestStrings) {
@@ -808,7 +808,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			} else {
 				backdoorport = 0;		// default random port
 			}
-			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorport, generateSecurityKey(), J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments));
+			String debugMode = J4RSystem.retrieveArgument(JavaLocalGatewayServer.DEBUG, arguments);
+			int key;
+			if (debugMode != null && debugMode.trim().toLowerCase().equals("on")) {
+				key = 1000000;
+			} else {
+				key = generateSecurityKey();
+			}
+			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorport, key, J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments));
 			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
 		} catch (Exception e) {

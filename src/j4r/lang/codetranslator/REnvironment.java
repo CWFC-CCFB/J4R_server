@@ -210,6 +210,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static String ConstructNullArrayCode = "cnarr";
 	private static String MethodCode = "method";
 	private static String SynchronizeEnvironment = "sync";
+	private static String FlushInstances = "flush";
+	private static String InternalMapSize = "size";
 	private static String FieldCode = "field";
 
 	private static final Random RANDOM = new Random();
@@ -227,6 +229,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			return processField(requestStrings);
 		} else if (requestStrings[0].equals(SynchronizeEnvironment)) {
 			return synchronizeEnvironment(requestStrings);
+		} else if (requestStrings[0].equals(FlushInstances)) {
+			return flushTheseObjects(requestStrings);
+		} else if (requestStrings[0].equals(InternalMapSize)) {
+			return innerFlush(null);
 		} else {
 			try {
 				return BasicClient.ClientRequest.valueOf(request);
@@ -236,6 +242,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 	}
 	
+
 	private Object synchronizeEnvironment(String[] requestStrings) {
 		Map<Integer, Object> actualMap = new HashMap<Integer, Object>();
 		for (int i = 1; i < requestStrings.length; i++) {
@@ -253,15 +260,40 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				toBeRemoved.put(System.identityHashCode(value), value);
 			}
 		}
-		for (Object value : toBeRemoved.values()) {
-			remove(System.identityHashCode(value), value);
+//		for (Object value : toBeRemoved.values()) {
+//			remove(System.identityHashCode(value), value);
+//		}
+//		JavaObjectList outputList = new JavaObjectList();
+//		registerMethodOutput(size(), outputList);
+//		return outputList;
+		return innerFlush(toBeRemoved);
+	}
+
+	private Object flushTheseObjects(String[] requestStrings) {
+		Map<Integer, Object> toBeRemoved = new HashMap<Integer, Object>();
+		for (int i = 1; i < requestStrings.length; i++) {
+			List<ParameterWrapper> wrappers = findObjectInEnvironment(requestStrings[i]);
+			if (wrappers != null) {
+				for (ParameterWrapper wrapper : wrappers) {
+					Object caller = wrapper.value;
+					toBeRemoved.put(System.identityHashCode(caller), caller);
+				}
+			}
+		}
+		return innerFlush(toBeRemoved);
+	}
+
+	private JavaObjectList innerFlush(Map<Integer, Object> toBeRemoved) {
+		if (toBeRemoved != null) {
+			for (Object value : toBeRemoved.values()) {
+				remove(System.identityHashCode(value), value);
+			}
 		}
 		JavaObjectList outputList = new JavaObjectList();
 		registerMethodOutput(size(), outputList);
 		return outputList;
 	}
-
-
+	
 	private List<ParameterWrapper> findObjectInEnvironment(String string) {
 		List<ParameterWrapper> wrappers = new ArrayList<ParameterWrapper>();
 		String prefix = "java.objecthashcode";

@@ -103,6 +103,9 @@ public abstract class ClientThread implements Runnable, ActionListener {
 		worker.start();
 	}
 	
+	protected void interrupt() {
+		worker.interrupt();
+	}
 	
 	/**
 	 * This method returns the ID of the worker.

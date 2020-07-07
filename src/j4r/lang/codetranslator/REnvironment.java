@@ -74,6 +74,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		PrimitiveTypeMap.put("character", String.class);
 		PrimitiveTypeMap.put("numeric", double.class);
 		PrimitiveTypeMap.put("logical", boolean.class);
+		PrimitiveTypeMap.put("long", long.class);
+		PrimitiveTypeMap.put("float", float.class);
 	}
 
 	static class InternalShutDownHook extends Thread {
@@ -209,7 +211,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static String ConstructArrayCode = "carr";
 	private static String ConstructNullArrayCode = "cnarr";
 	private static String MethodCode = "method";
-	private static String SynchronizeEnvironment = "sync";
+//	private static String SynchronizeEnvironment = "sync";
 	private static String FlushInstances = "flush";
 	private static String InternalMapSize = "size";
 	private static String FieldCode = "field";
@@ -227,12 +229,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			return processMethod(requestStrings);
 		} else if (requestStrings[0].equals(FieldCode)) {
 			return processField(requestStrings);
-		} else if (requestStrings[0].equals(SynchronizeEnvironment)) {
-			return synchronizeEnvironment(requestStrings);
+//		} else if (requestStrings[0].equals(SynchronizeEnvironment)) {
+//			return synchronizeEnvironment(requestStrings);
 		} else if (requestStrings[0].equals(FlushInstances)) {
 			return flushTheseObjects(requestStrings);
 		} else if (requestStrings[0].equals(InternalMapSize)) {
-			return innerFlush(null);
+			return getInternalMapSize();
 		} else {
 			try {
 				return BasicClient.ClientRequest.valueOf(request);
@@ -243,52 +245,50 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	}
 	
 
-	private Object synchronizeEnvironment(String[] requestStrings) {
-		Map<Integer, Object> actualMap = new HashMap<Integer, Object>();
-		for (int i = 1; i < requestStrings.length; i++) {
-			List<ParameterWrapper> wrappers = findObjectInEnvironment(requestStrings[i]);
-			if (wrappers != null) {
-				for (ParameterWrapper wrapper : wrappers) {
-					Object caller = wrapper.value;
-					actualMap.put(System.identityHashCode(caller), caller);
-				}
-			}
-		}
-		Map<Integer, Object> toBeRemoved = new HashMap<Integer, Object>();
-		for (Object value : values()) {
-			if (!actualMap.containsKey(System.identityHashCode(value))) {
-				toBeRemoved.put(System.identityHashCode(value), value);
-			}
-		}
-//		for (Object value : toBeRemoved.values()) {
-//			remove(System.identityHashCode(value), value);
+//	private Object synchronizeEnvironment(String[] requestStrings) {
+//		Map<Integer, Object> actualMap = new HashMap<Integer, Object>();
+//		for (int i = 1; i < requestStrings.length; i++) {
+//			List<ParameterWrapper> wrappers = findObjectInEnvironment(requestStrings[i]);
+//			if (wrappers != null) {
+//				for (ParameterWrapper wrapper : wrappers) {
+//					Object caller = wrapper.value;
+//					actualMap.put(System.identityHashCode(caller), caller);
+//				}
+//			}
 //		}
-//		JavaObjectList outputList = new JavaObjectList();
-//		registerMethodOutput(size(), outputList);
-//		return outputList;
-		return innerFlush(toBeRemoved);
-	}
+//		Map<Integer, Object> toBeRemoved = new HashMap<Integer, Object>();
+//		for (Object value : values()) {
+//			if (!actualMap.containsKey(System.identityHashCode(value))) {
+//				toBeRemoved.put(System.identityHashCode(value), value);
+//			}
+//		}
+////		for (Object value : toBeRemoved.values()) {
+////			remove(System.identityHashCode(value), value);
+////		}
+////		JavaObjectList outputList = new JavaObjectList();
+////		registerMethodOutput(size(), outputList);
+////		return outputList;
+//		return innerFlush(toBeRemoved);
+//	}
 
 	private Object flushTheseObjects(String[] requestStrings) {
-		Map<Integer, Object> toBeRemoved = new HashMap<Integer, Object>();
-		for (int i = 1; i < requestStrings.length; i++) {
-			List<ParameterWrapper> wrappers = findObjectInEnvironment(requestStrings[i]);
-			if (wrappers != null) {
-				for (ParameterWrapper wrapper : wrappers) {
-					Object caller = wrapper.value;
-					toBeRemoved.put(System.identityHashCode(caller), caller);
+		String prefix = "java.objecthashcode";
+		if (requestStrings[1].startsWith(prefix)) {
+			String[] newArgs = requestStrings[1].substring(prefix.length()).split(SubSplitter);
+//			int nbRemoved = 0;
+			for (int i = 0; i < newArgs.length; i++) {
+				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
+				if (containsKey(hashcodeForThisJavaObject)) {
+					remove(hashcodeForThisJavaObject);
+//					nbRemoved++;
 				}
 			}
+//			System.out.println("Nb removed " + nbRemoved + "/" + newArgs.length);
 		}
-		return innerFlush(toBeRemoved);
+		return null;
 	}
 
-	private JavaObjectList innerFlush(Map<Integer, Object> toBeRemoved) {
-		if (toBeRemoved != null) {
-			for (Object value : toBeRemoved.values()) {
-				remove(System.identityHashCode(value), value);
-			}
-		}
+	private JavaObjectList getInternalMapSize() {
 		JavaObjectList outputList = new JavaObjectList();
 		registerMethodOutput(size(), outputList);
 		return outputList;
@@ -730,6 +730,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			} else if (primitiveTypeClass == "logical") {
 				String subString = value.toLowerCase();
 				wrappers.add(new ParameterWrapper(boolean.class, Boolean.valueOf(subString).booleanValue()));
+			} else if (primitiveTypeClass == "long") {
+				wrappers.add(new ParameterWrapper(long.class, Long.parseLong(value)));
+			} else if (primitiveTypeClass == "float") {
+				wrappers.add(new ParameterWrapper(float.class, Float.parseFloat(value)));
 			}
 		}
 		return wrappers;
@@ -770,6 +774,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 				
 				String port = J4RSystem.retrieveArgument(JavaLocalGatewayServer.PORT, arguments);
 				if (port != null) {
+					String[] p = port.split(JavaLocalGatewayServer.PortSplitter);
+					for (int i = 0; i < p.length; i++) {
+						if (Integer.parseInt(p[i]) < 0) {
+							throw new InvalidParameterException("Port numbers should be integers equal to or greater than 0!");
+						};
+					}
 					newCommands.add(JavaLocalGatewayServer.PORT);
 					newCommands.add(port);
 				} else {
@@ -851,6 +861,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
 		} catch (Exception e) {
+			System.err.println("Error:" + e.getMessage());
 			System.exit(1);
 		}
 	}

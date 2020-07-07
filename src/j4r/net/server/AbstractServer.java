@@ -21,10 +21,13 @@ package j4r.net.server;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -44,6 +47,74 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		SecurityFailed}
 
 	
+	/**
+	 * The BackDoorThread class processes the request one by one and close the socket after
+	 * each one of them leaving the ServerSocket free to accept other calls. 
+	 */
+	class BackDoorThread extends Thread {
+		
+		final ServerSocket emergencySocket;
+		final int port;
+		
+		BackDoorThread(int port) throws IOException {
+			super("Back door thread");
+			setDaemon(true);
+			this.port = port;
+			emergencySocket = new ServerSocket(port);
+			start();
+		}
+		
+		@Override
+		public void run() {
+			while (true) {
+				SocketWrapper clientSocket = null;
+				try {
+					clientSocket = new TCPSocketWrapper(emergencySocket.accept(), false);
+					clientSocket.writeObject(ServerReply.CallAccepted);
+					if (AbstractServer.this.checkSecurity(clientSocket)) {
+						Object request = clientSocket.readObject();
+						if (request.toString().equals("emergencyShutdown")) {
+							System.exit(1);
+						} else if (request.toString().equals("softExit")) {
+							emergencySocket.close();
+							break;
+						} else if (request.toString().equals("interrupt")) {
+							InetAddress clientAddress = clientSocket.getInetAddress();
+							for (ClientThread t : AbstractServer.this.whoIsWorkingForWho.keySet()) {
+								InetAddress clientOfThisTread = AbstractServer.this.whoIsWorkingForWho.get(t);
+								if (clientOfThisTread.equals(clientAddress)) {
+									t.interrupt();
+								}
+							}
+						}
+					}
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				} finally {
+					try {
+						if (clientSocket != null  && !clientSocket.isClosed()) {
+							clientSocket.close();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		protected void softExit() {
+			try {
+				Socket socket = new Socket(InetAddress.getLoopbackAddress(), port);
+				SocketWrapper socketWrapper = new TCPSocketWrapper(socket, false);
+				socketWrapper.readObject();
+				socketWrapper.writeObject("softExit");
+				socketWrapper.close();
+			} catch (Exception e) {}
+		}
+	}
+
 	/**
 	 * This internal class handles the calls and stores these in the queue.
 	 * @author Mathieu Fortin
@@ -101,9 +172,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 
 	private ArrayList<ClientThread> clientThreads;
-//	protected final LinkedBlockingQueue<SocketWrapper> clientQueue;
 	protected final List<CallReceiverThread> callReceiverThreads;
-	
+	protected final ConcurrentHashMap<ClientThread, InetAddress> whoIsWorkingForWho;
+
 	protected final boolean isCallerAJavaApplication;
 	
 	private final ServerConfiguration configuration;
@@ -120,6 +191,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		this.configuration = configuration;
 		this.isCallerAJavaApplication = isCallerAJavaApplication;
 		clientThreads = new ArrayList<ClientThread>();
+		this.whoIsWorkingForWho = new ConcurrentHashMap<ClientThread, InetAddress>();
 //		clientQueue = new LinkedBlockingQueue<SocketWrapper>();
 		callReceiverThreads = new ArrayList<CallReceiverThread>();
 		try {

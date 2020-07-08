@@ -206,12 +206,13 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		
 	}
 		
-	private static String ConstructCode = "c";
-	private static String ConstructNullCode = "cnu";
-	private static String ConstructArrayCode = "carr";
-	private static String ConstructNullArrayCode = "cnarr";
+	private static String ConstructCode = "co";
+	private static String ConstructNullArrayCode = "cona";
+	private static String ConstructNullCode = "conu";
+	private static String ConstructArrayCode = "coar";
 	private static String MethodCode = "method";
 //	private static String SynchronizeEnvironment = "sync";
+	private static String ClassInfo = "cli";
 	private static String FlushInstances = "flush";
 	private static String InternalMapSize = "size";
 	private static String FieldCode = "field";
@@ -229,6 +230,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			return processMethod(requestStrings);
 		} else if (requestStrings[0].equals(FieldCode)) {
 			return processField(requestStrings);
+		} else if (requestStrings[0].equals(ClassInfo)) {
+			return getClassInfo(requestStrings);
 //		} else if (requestStrings[0].equals(SynchronizeEnvironment)) {
 //			return synchronizeEnvironment(requestStrings);
 		} else if (requestStrings[0].equals(FlushInstances)) {
@@ -244,6 +247,43 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 	}
 	
+
+	private Object getClassInfo(String[] requestStrings) throws ClassNotFoundException {
+		String classname = requestStrings[1];
+		Class clazz;
+		boolean isArray;
+		if (classname.startsWith("[")) {
+			clazz = Object.class;
+			isArray = true;
+		} else {
+			clazz = Class.forName(classname);
+			isArray = false;
+		}
+		Method[] methods = clazz.getMethods();
+		JavaObjectList outputList = new JavaObjectList();
+		for (Method m : methods) {
+			registerMethodOutput(m.getName(), outputList);
+		}
+		if (isArray) {
+			registerMethodOutput("clone", outputList); // clone is changed from protected to public when dealing with arrays
+		}
+		registerMethodOutput("endOfMethods", outputList);
+		Field[] fields = clazz.getFields();
+		for (Field f : fields) {
+			registerMethodOutput(f.getName(), outputList);
+		}
+		if (isArray) {
+			registerMethodOutput("length", outputList);
+		}
+		if (outputList.isEmpty()) {
+			return null;
+		} else if (outputList.size() == 1) {
+			return outputList.get(0);
+		} else {
+			return outputList;
+		}
+	}
+
 
 //	private Object synchronizeEnvironment(String[] requestStrings) {
 //		Map<Integer, Object> actualMap = new HashMap<Integer, Object>();

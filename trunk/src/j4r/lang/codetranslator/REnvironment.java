@@ -375,7 +375,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			if (wrappers.size() == 1 && caller.type.equals(String.class)) { // could be a call to a static method
 				try {
 					String className = caller.value.toString();
-					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+//					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+					clazz = Class.forName(className);
 					lookingForStaticMethod = true;
 					wrappers = new ArrayList<ParameterWrapper>();
 					wrappers.add(new ParameterWrapper(clazz, null));
@@ -393,30 +394,38 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 		ParameterList parameters = (ParameterList) outputLists[1];
 		String fieldName = requestStrings[2];
-		Field field;
-		try {
-			field = clazz.getField(fieldName);
-		} catch (NoSuchFieldException e) {
-			if (clazz.equals(String.class)) {
-				throw new NoSuchFieldException(e.getMessage() + " - NOTE: the source was treated as a String object!");
-			} else {
-				throw e;
-			}
-		} 			
+		boolean isArrayLengthCalled = clazz.getName().startsWith("[") && parameters.isEmpty() && fieldName.equals("length");
+		Field field = null;
+		if (!isArrayLengthCalled) {
+			try {
+				field = clazz.getField(fieldName);
+			} catch (NoSuchFieldException e) {
+				if (clazz.equals(String.class)) {
+					throw new NoSuchFieldException(e.getMessage() + " - NOTE: the source was treated as a String object!");
+				} else {
+					throw e;
+				}
+			} 			
 
-		if (lookingForStaticMethod) {
-			if (!Modifier.isStatic(field.getModifiers())) {		// checks if the field is truly static or throws an exception otherwise
-				throw new InvalidParameterException("The field is not a static field!");
+			if (lookingForStaticMethod) {
+				if (!Modifier.isStatic(field.getModifiers())) {		// checks if the field is truly static or throws an exception otherwise
+					throw new InvalidParameterException("The field is not a static field!");
+				}
 			}
 		}
 		
 		JavaObjectList outputList = new JavaObjectList();
-		if (parameters.isEmpty()) {
+		if (parameters.isEmpty()) {		// that is a getField call
 			for (int j = 0; j < wrappers.size(); j++) {
-				Object result = field.get(wrappers.get(j).value);
+				Object result;
+				if (isArrayLengthCalled) {
+					result = Array.getLength(wrappers.get(j).value);
+				} else {
+				 	result = field.get(wrappers.get(j).value);
+				}
 				registerMethodOutput(result, outputList);
 			}
-		} else {
+		} else {						// that is a setField call
 			if (wrappers.size() > 1 && parameters.getInnerSize() > 1 && wrappers.size() != parameters.getInnerSize()) {
 				throw new InvalidParameterException("The length of the java.arraylist object is different of the length of the vectors in the parameters!");
 			} else {
@@ -464,7 +473,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			if (wrappers.size() == 1 && caller.type.equals(String.class)) { // could be a call to a static method
 				try {
 					String className = caller.value.toString();
-					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+//					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+					clazz = Class.forName(className);
 					lookingForStaticMethod = true;
 					wrappers = new ArrayList<ParameterWrapper>();
 					wrappers.add(new ParameterWrapper(clazz, null));
@@ -659,7 +669,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		if (ReflectUtility.PrimitiveTypeMap.containsKey(className)) {
 			clazz = ReflectUtility.PrimitiveTypeMap.get(className);
 		} else {
-			clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+//			clazz = ClassLoader.getSystemClassLoader().loadClass(className);
+			clazz = Class.forName(className);
 		}
 		
 		List[] outputLists = marshallParameters(requestStrings, 2);

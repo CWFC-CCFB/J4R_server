@@ -66,7 +66,7 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 
 	@Override
 	public void doThisJob() throws Exception {
-		System.out.println("Launching " + getName() + "...");
+//		System.out.println("Launching " + getName() + "...");
 		for (JVM_OPTION option : internalProcess.getJVMSettings().keySet()) {
 			System.out.println(option.name() + " = " + internalProcess.getJVMSettings().get(option).toString());
 		}

@@ -284,12 +284,12 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * @throws InterruptedException
 	 */
 	protected void startReceiverThread() throws ExecutionException, InterruptedException {
-		System.out.println("Server starting");
 		listenToClients();
 		for (CallReceiverThread t : callReceiverThreads) {
 			t.start();
 		}
 		gcReceiverThread.start();
+		System.out.println("Server started");
 //		callReceiver.join();
 //		System.out.println("Server shutting down");
 	}

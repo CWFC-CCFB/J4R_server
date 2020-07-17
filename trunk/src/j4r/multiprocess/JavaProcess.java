@@ -147,7 +147,7 @@ public final class JavaProcess extends AbstractIndependentProcess {
 			finalCommands.add("-jar");
 		}
 		finalCommands.addAll(commands);
-//		System.out.println(finalCommands);
+		System.out.println(finalCommands);
 		ProcessBuilder pb = new ProcessBuilder(finalCommands);
 		pb.redirectErrorStream(true);
 		if (workingDirectory != null) {

@@ -1,7 +1,8 @@
 /*
  * This file is part of the j4r library.
  *
- * Copyright (C) 2009-2020 Mathieu Fortin for Canadian Forest Service.
+ * Copyright (C) 2020-2021 Her Majesty the Queen in right of Canada
+ * Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,7 +39,7 @@ import j4r.lang.reflect.ReflectUtility;
 import j4r.multiprocess.JavaProcess;
 import j4r.multiprocess.JavaProcessWrapper;
 import j4r.net.server.BasicClient;
-import j4r.net.server.JavaLocalGatewayServer;
+import j4r.net.server.JavaGatewayServer;
 import j4r.net.server.ServerConfiguration;
 
 @SuppressWarnings("serial")
@@ -887,7 +888,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		JavaLocalGatewayServer server = null;
+		JavaGatewayServer server = null;
 		try {
 			List<String> arguments = J4RSystem.setClassicalOptions(args);
 			String firstCall = J4RSystem.retrieveArgument(FIRSTCALL, arguments);
@@ -901,7 +902,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				} else {
 					classPath = "j4r.jar";
 				}
-				String extensionPath = J4RSystem.retrieveArgument(JavaLocalGatewayServer.EXTENSION, arguments);
+				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
 					if (new File(extensionPath).exists()) {
 						String classPathSeparator = ":";
@@ -912,32 +913,32 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 					}
 				}
 				
-				String port = J4RSystem.retrieveArgument(JavaLocalGatewayServer.PORT, arguments);
+				String port = J4RSystem.retrieveArgument(JavaGatewayServer.PORT, arguments);
 				if (port != null) {
-					String[] p = port.split(JavaLocalGatewayServer.PortSplitter);
+					String[] p = port.split(JavaGatewayServer.PortSplitter);
 					for (int i = 0; i < p.length; i++) {
 						if (Integer.parseInt(p[i]) < 0) {
 							throw new InvalidParameterException("Port numbers should be integers equal to or greater than 0!");
 						};
 					}
-					newCommands.add(JavaLocalGatewayServer.PORT);
+					newCommands.add(JavaGatewayServer.PORT);
 					newCommands.add(port);
 				} else {
-					String nbPorts = J4RSystem.retrieveArgument(JavaLocalGatewayServer.NB_PORTS, arguments);
+					String nbPorts = J4RSystem.retrieveArgument(JavaGatewayServer.NB_PORTS, arguments);
 					if (nbPorts == null) { // make sure there is at least one port
-						newCommands.add(JavaLocalGatewayServer.NB_PORTS);
+						newCommands.add(JavaGatewayServer.NB_PORTS);
 						newCommands.add("1");
 					} else {
-						newCommands.add(JavaLocalGatewayServer.NB_PORTS);
+						newCommands.add(JavaGatewayServer.NB_PORTS);
 						newCommands.add(nbPorts);
 					}
 				}
 
-				String wd = J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments);
-				newCommands.add(JavaLocalGatewayServer.WD);
+				String wd = J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments);
+				newCommands.add(JavaGatewayServer.WD);
 				newCommands.add(wd);
 
-				String memorySizeStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.MEMORY, arguments);
+				String memorySizeStr = J4RSystem.retrieveArgument(JavaGatewayServer.MEMORY, arguments);
 				Integer memorySize = null;
 				if (memorySizeStr != null) {
 					try {
@@ -963,12 +964,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				rGatewayProcessWrapper.run();
 				System.exit(0);
 			}
-			String portStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.PORT, arguments);
+			String portStr = J4RSystem.retrieveArgument(JavaGatewayServer.PORT, arguments);
 			int[] listeningPorts;
 			if (portStr != null) {
 				listeningPorts = parsePorts(portStr);
 			} else {
-				String nbPortsStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.NB_PORTS, arguments);
+				String nbPortsStr = J4RSystem.retrieveArgument(JavaGatewayServer.NB_PORTS, arguments);
 				int nbPorts;
 				if (nbPortsStr == null) {
 					nbPorts = 1;
@@ -977,22 +978,23 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				}
 				listeningPorts = new int[nbPorts];
 			}
-			String backdoorportStr = J4RSystem.retrieveArgument(JavaLocalGatewayServer.BACKDOORPORT, arguments);
+			String backdoorportStr = J4RSystem.retrieveArgument(JavaGatewayServer.BACKDOORPORT, arguments);
 			int[] backdoorports;
 			if (backdoorportStr != null) {
 				backdoorports = parsePorts(backdoorportStr);
 			} else {
 				backdoorports = new int[2];
 			}
-			String debugMode = J4RSystem.retrieveArgument(JavaLocalGatewayServer.DEBUG, arguments);
+			String publicMode = J4RSystem.retrieveArgument(JavaGatewayServer.PUBLIC, arguments);
 			int key;
-			if (debugMode != null && debugMode.trim().toLowerCase().equals("on")) {
-				key = 1000000;
+			if (publicMode != null && publicMode.trim().toLowerCase().equals("on")) {
+				String keyStr = J4RSystem.retrieveArgument(JavaGatewayServer.KEY, arguments);
+				key = Integer.parseInt(keyStr);
 			} else {
 				key = generateSecurityKey();
 			}
-			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaLocalGatewayServer.WD, arguments));
-			server = new JavaLocalGatewayServer(conf, new REnvironment());
+			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments));
+			server = new JavaGatewayServer(conf, new REnvironment(), null);	// null: no need for a main instance in the case of a private server
 			server.startApplication();
 		} catch (Exception e) {
 			System.err.println("Error:" + e.getMessage());
@@ -1001,7 +1003,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 	
 	private static int[] parsePorts(String str) {
-		String[] p = str.split(JavaLocalGatewayServer.PortSplitter);
+		String[] p = str.split(JavaGatewayServer.PortSplitter);
 		int[] ports = new int[p.length];
 		for (int i = 0; i < p.length; i++) {
 			ports[i] = Integer.parseInt(p[i]);

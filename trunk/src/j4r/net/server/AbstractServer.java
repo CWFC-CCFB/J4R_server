@@ -1,7 +1,8 @@
 /*
  * This file is part of the j4r library.
  *
- * Copyright (C) 2020 Mathieu Fortin for Canadian Forest Service.
+ * Copyright (C) 2020-2021 Her Majesty the Queen in right of Canada
+ * Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -228,7 +229,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	
 	protected boolean checkSecurity(SocketWrapper clientSocket) {
-		if (configuration.isLocal) {
+		if (configuration.isPrivateServer()) {
 			try {
 				Object obj = clientSocket.readObject();
 				int key = Integer.parseInt(obj.toString());
@@ -322,7 +323,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	@Override
 	protected void firstTasksToDo() {
 		addTask(new ServerTask(ServerTaskID.StartReceiverThread, this));
-		if (configuration.isLocalServer()) {
+		if (configuration.isPrivateServer()) {
 			addTask(new ServerTask(ServerTaskID.CreateFileInfo, this));
 		}
 	}

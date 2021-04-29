@@ -1,0 +1,195 @@
+<project name="j4r">
+
+	<property name="project.name" value="j4r" />
+	<property name="project.description" value="A gateway server to run native Java code from R" />
+	<property name="ext.dir" value="../externallibraries" />
+	<property name="bin.dir" value="bin" />
+	<property name="src.dir" value="src" />
+	<property name="test.dir" value="test" />
+	<property name="test.rep.dir" value="../testdev" />
+	<property name="java.doc.dir" value="../javadoc" />
+	<property name="test.prod.dir" value="../testprod" />
+	<property name="vendor" value="Canadian Wood Fibre Centre" />
+	<property name="version" value="1.0.0" />
+	
+
+
+	<path id="myJARFile">
+		<fileset dir="${ext.dir}">
+			<include name="${project.name}.jar" />
+		</fileset>
+	</path>
+	
+		<path id="junit">
+		<fileset dir="${ext.dir}">
+			<include name="junit.jar" />
+		</fileset>
+	</path>
+
+	<path id="hamcrest">
+		<fileset dir="${ext.dir}">
+			<include name="hamcrest-core.jar" />
+		</fileset>
+	</path>
+
+
+	<!-- ERASE THE BINARY DIRECTORY -->
+    <target name="clean">
+        <delete dir="${bin.dir}"/>
+    </target>
+
+
+	<!-- COMPILE SOURCES ONLY -->
+    <target name="compile" description="Compile src only" depends="clean">
+        <mkdir dir="${bin.dir}"/>
+		
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="on">
+		</javac>
+		
+		<copy todir="${bin.dir}">
+			<fileset dir="${src.dir}" excludes="**/*.java" />
+		</copy>
+    </target>
+
+
+	<!-- COMPILE TESTS -->
+    <target name="compile-test" description="Compile tests">
+        <mkdir dir="${bin.dir}"/>
+		
+        <javac srcdir="${test.dir}" destdir="${bin.dir}">
+			<classpath>
+				<path refid="repicea"/>
+				<path refid="junit"/>
+			</classpath>
+		</javac>
+		
+		<copy todir="${bin.dir}">
+			<fileset dir="${test.dir}" excludes="**/*.java" />
+		</copy>
+    </target>
+
+
+	<!-- COMPILE PRODUCTION TESTS -->
+    <target name="compile-prodtest" description="Compile production tests">
+        <delete dir="${bin.dir}"/>
+        <mkdir dir="${bin.dir}"/>
+		
+        <javac srcdir="${test.dir}" destdir="${bin.dir}">
+			<classpath>
+				<path refid="myJARFile"/>
+				<path refid="repicea"/>
+				<path refid="junit"/>
+			</classpath>
+		</javac>
+		
+		<copy todir="${bin.dir}">
+			<fileset dir="${test.dir}" excludes="**/*.java" />
+		</copy>
+    </target>
+
+
+	<!-- COMPILE ALL SOURCES AND TESTS -->
+    <target name="compile-all" description="Clean and compile src and test" depends="compile,compile-test"/>
+
+	
+	<!-- TEST DEV -->
+	<target name="test" description="Run all JUnit tests" depends="compile-all">
+		<mkdir dir="${test.rep.dir}"/>
+		<delete dir="${test.rep.dir}/${project.name}"/>
+		<mkdir dir="${test.rep.dir}/${project.name}"/>
+
+		<junit fork="no" printsummary="yes" showOutput="true" filtertrace="off">
+
+			<classpath>
+				<pathelement location="${bin.dir}" />
+				<path refid="junit"/>
+				<path refid="hamcrest"/>
+			</classpath>
+			
+			<formatter type="xml"/>
+			
+			<batchtest fork="no" todir="${test.rep.dir}/${project.name}">
+				<fileset dir="${bin.dir}">
+					<include name="**/*Test.class" />
+					<!-- Do not include inner class -->
+					<exclude name="**/*$*" />
+				</fileset>
+			</batchtest>
+		</junit>
+		<junitreport todir="${test.rep.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
+			<fileset dir="${test.rep.dir}/${project.name}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.rep.dir}/${project.name}"/>
+		</junitreport>
+	</target>
+
+
+	<!-- TEST PROD -->
+	<target name="test-prod" description="Run all JUnit tests with jar file" depends="jar,compile-prodtest">
+		<mkdir dir="${test.prod.dir}"/>
+		<delete dir="${test.prod.dir}/${project.name}"/>
+		<mkdir dir="${test.prod.dir}/${project.name}"/>
+
+		<junit fork="no" printsummary="yes" showOutput="true" filtertrace="off">
+
+			<classpath>
+				<pathelement location="${bin.dir}" />
+				<path refid="myJARFile"/>
+				<path refid="junit"/>
+				<path refid="hamcrest"/>
+			</classpath>
+			
+			<formatter type="xml"/>
+			
+			<batchtest fork="no" todir="${test.prod.dir}/${project.name}">
+				<fileset dir="${bin.dir}">
+					<include name="**/*Test.class" />
+					<!-- Do not include inner class -->
+					<exclude name="**/*$*" />
+				</fileset>
+			</batchtest>
+		</junit>
+		<junitreport todir="${test.prod.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
+			<fileset dir="${test.prod.dir}/${project.name}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.prod.dir}/${project.name}"/>
+		</junitreport>
+	</target>
+
+
+	<!-- JAVADOC -->
+	<target name="javadoc" description="Generate Java documentation" depends="compile">
+		<mkdir dir="${java.doc.dir}"/>
+		<delete dir="${java.doc.dir}/${project.name}"/>
+		<mkdir dir="${java.doc.dir}/${project.name}"/>
+
+		<javadoc packagenames="${project.name}.*" sourcepath="${src.dir}" destdir="${java.doc.dir}/${project.name}" version="true" windowtitle="${project.description}" />
+		<echo message="Java doc has been generated!" />
+	</target>
+
+
+	<!-- CREATE JAR FILE -->
+    <target name="jar" depends="compile">
+        <jar destfile="${ext.dir}/${project.name}.jar">
+			<fileset dir="${bin.dir}"/>
+			<fileset dir="${src.dir}" includes="**/*.java"/>
+			<fileset dir="." includes="COPYING.LESSER.txt"/>
+			<fileset dir="." includes="README.txt"/>
+            <manifest>
+                <attribute name="Built-By" value="Mathieu Fortin"/>
+				<attribute name="Specification-Title" value="${project.description}"/>
+				<attribute name="Specification-Version" value="1.0.0"/>
+				<attribute name="Specification-Vendor" value="${vendor}"/>
+				<attribute name="Implementation-Title" value="${project.name}"/>
+				<attribute name="Implementation-Version" value="build"/>
+				<attribute name="Implementation-Vendor" value="${vendor}"/>
+				<attribute name="Main-Class" value="j4r.lang.codetranslator.REnvironment"/>
+				<attribute name="Class-Path" value="."/>
+             </manifest>
+        </jar>
+    </target>
+
+
+</project>	

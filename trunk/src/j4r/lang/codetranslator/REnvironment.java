@@ -934,6 +934,21 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 					}
 				}
 
+				String backdoorport = J4RSystem.retrieveArgument(JavaGatewayServer.BACKDOORPORT, arguments);
+				if (backdoorport != null) {
+					String[] p = backdoorport.split(JavaGatewayServer.PortSplitter);
+					if (p.length != 2) {
+						throw new InvalidParameterException("There should be two backdoor ports!");
+					}
+					for (int i = 0; i < p.length; i++) {
+						if (Integer.parseInt(p[i]) < 0) {
+							throw new InvalidParameterException("Backdoor port numbers should be integers equal to or greater than 0!");
+						};
+					}
+					newCommands.add(JavaGatewayServer.BACKDOORPORT);
+					newCommands.add(backdoorport);
+				}
+				
 				String wd = J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments);
 				newCommands.add(JavaGatewayServer.WD);
 				newCommands.add(wd);
@@ -994,7 +1009,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				key = generateSecurityKey();
 			}
 			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments));
-			server = new JavaGatewayServer(conf, new REnvironment(), null);	// null: no need for a main instance in the case of a private server
+			server = new JavaGatewayServer(conf, null);	// null: no need for a main instance in the case of a private server
 			server.startApplication();
 		} catch (Exception e) {
 			System.err.println("Error:" + e.getMessage());

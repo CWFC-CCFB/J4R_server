@@ -50,7 +50,8 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	
 	/**
 	 * The BackDoorThread class processes the request one by one and close the socket after
-	 * each one of them leaving the ServerSocket free to accept other calls. 
+	 * each one of them leaving the ServerSocket free to accept other calls. It is 
+	 * a daemon thread because we don't want it to prevent the JVM from exiting.
 	 */
 	class BackDoorThread extends Thread {
 		
@@ -77,8 +78,10 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 						if (request.toString().equals("emergencyShutdown")) {
 							System.exit(1);
 						} else if (request.toString().equals("softExit")) {
-							emergencySocket.close();
-							break;
+							if (AbstractServer.this.configuration.isPrivateServer()) {  // close socket only if the server is private
+								emergencySocket.close();
+								break;
+							}
 						} else if (request.toString().equals("interrupt")) {
 							InetAddress clientAddress = clientSocket.getInetAddress();
 							for (ClientThread t : AbstractServer.this.whoIsWorkingForWho.keySet()) {

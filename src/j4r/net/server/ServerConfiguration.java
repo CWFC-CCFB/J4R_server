@@ -49,7 +49,7 @@ public class ServerConfiguration implements Serializable {
 	 * @param numberOfClientThreadsPerReceiver number of threads that can answer calls.
 	 * @param maxSizeOfWaitingList number of pending calls
 	 * @param listeningPort ports on which the server exchange the information with the clients
-	 * @param internalPorts ports on which the server can be accessed (backdoor port)
+	 * @param internalPorts the backdoor port followed by the garbage collection port (0 for random port selection)
 	 * @param key a security token to ensure the client is really a known user
 	 */
 	public ServerConfiguration(int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, int[] listeningPorts, int[] internalPorts, int key) {
@@ -70,7 +70,7 @@ public class ServerConfiguration implements Serializable {
 	 * connection or the connection is lost. It is instantiated manually and usually not from the client environment.
 	 * 
 	 * @param listiningPorts the ports to which the ServerSocket will listen (0 for random port selection)
-	 * @param internalPorts the backdoor ports (0 for random port selection)
+	 * @param internalPorts the backdoor port followed by the garbage collection port (0 for random port selection)
 	 * @param numberOfClientThreadsPerReceiver
 	 * @param maxSizeOfWaitingList
 	 * @param isPrivateServer true for a private server or false otherwise
@@ -123,7 +123,7 @@ public class ServerConfiguration implements Serializable {
 	 * Configuration for private servers.
 	 * 
 	 * @param listiningPorts the ports to which the ServerSocket will listen (0 for random port selection)
-	 * @param internalPorts the backdoor ports (0 for random port selection)
+	 * @param internalPorts the backdoor port followed by the garbage collection port (0 for random port selection)
 	 * @param key a security token to ensure the client is really a known user
 	 * @param wd a string representing the working directory. If it is invalid, then Java uses the temporary directory as
 	 * specified in the property 

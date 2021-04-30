@@ -182,7 +182,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	protected final boolean isCallerAJavaApplication;
 	
-	private final ServerConfiguration configuration;
+	protected final ServerConfiguration configuration;
 
 	private List<PropertyChangeListener> listeners;
 
@@ -229,7 +229,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	
 	protected boolean checkSecurity(SocketWrapper clientSocket) {
-		if (configuration.isPrivateServer()) {
+//		if (configuration.isPrivateServer()) {
 			try {
 				Object obj = clientSocket.readObject();
 				int key = Integer.parseInt(obj.toString());
@@ -248,9 +248,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				}
 				return false;
 			}
-		} else {
-			return true;	// for web server 
-		}
+//		} else {
+//			return true;	// for web server 
+//		}
 	}
 
 

@@ -101,7 +101,9 @@ public class JavaGatewayServer extends AbstractServer {
 									if (!JavaGatewayServer.this.whoIsWorkingForWho.contains(clientAddress)) {
 										JavaGatewayServer.this.translators.remove(clientAddress);
 									}
-									JavaGatewayServer.this.requestShutdown();
+									if (JavaGatewayServer.this.configuration.isPrivateServer()) {
+										JavaGatewayServer.this.requestShutdown();
+									}
 									break;
 								} else {
 									socketWrapper.writeObject(somethingInParticular);
@@ -157,24 +159,25 @@ public class JavaGatewayServer extends AbstractServer {
 
 	}
 
-	private static Object MainInstance;
+	private static JavaGatewayServer Instance;
 	
 	protected final ConcurrentHashMap<InetAddress, REnvironment> translators;	
 	protected final boolean shutdownOnClosedConnection;
 	protected boolean bypassShutdownForTesting;	// TODO: MF2021-04-29 Might be deprecated
+	private final Object mainInstance;
 	
 	/**
 	 * Constructor.
 	 * @param servConf a ServerConfiguration instance
-	 * @param translator an instance that implements the REpiceaCodeTranslator interface
 	 * @param mainInstance an Object that can later be accessed by the client using the static getMainInstance() method
 	 * @throws Exception
 	 */
-	public JavaGatewayServer(ServerConfiguration servConf, REnvironment translator, Object mainInstance) throws Exception {
-//		this(servConf, translator, true); // true: the server shuts down when the connection is lost
+	public JavaGatewayServer(ServerConfiguration servConf, Object mainInstance) throws Exception {
 		super(servConf, false);
 		this.translators = new ConcurrentHashMap<InetAddress, REnvironment>();
 		this.shutdownOnClosedConnection = servConf.isPrivateServer();	// enable shutdown on close connection for private servers only
+		this.mainInstance = mainInstance;
+		Instance = this;
 	}
 
 	/**
@@ -184,7 +187,7 @@ public class JavaGatewayServer extends AbstractServer {
 	 * @return an Object instance
 	 */
 	public static Object getMainInstance() {
-		return MainInstance;
+		return Instance.mainInstance;
 	}
 
 	synchronized REnvironment registerClient(InetAddress clientAddress) {
@@ -247,8 +250,6 @@ public class JavaGatewayServer extends AbstractServer {
 		writer.write(outputStr);
 		writer.close();
 	}
-	
-	
 	
 	
 }

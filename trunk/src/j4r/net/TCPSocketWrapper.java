@@ -89,7 +89,7 @@ public class TCPSocketWrapper implements SocketWrapper {
 	}
 
 	/**
-	 * This method returns a String from the incoming bytes. The buffer is 100000 byte long.
+	 * This method returns a String from the incoming bytes. The buffer is 100000 bytes long.
 	 * @return a String instance
 	 * @throws IOException
 	 */

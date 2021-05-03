@@ -76,9 +76,11 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 					if (AbstractServer.this.checkSecurity(clientSocket)) {
 						Object request = clientSocket.readObject();
 						if (request.toString().equals("emergencyShutdown")) {
-							System.exit(1);
+							if (AbstractServer.this.isPrivate()) {  // emergency shutdown only if the server is private
+								System.exit(1);
+							}
 						} else if (request.toString().equals("softExit")) {
-							if (AbstractServer.this.configuration.isPrivateServer()) {  // close socket only if the server is private
+							if (AbstractServer.this.isPrivate()) {  // close socket only if the server is private
 								emergencySocket.close();
 								break;
 							}
@@ -185,7 +187,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	protected final boolean isCallerAJavaApplication;
 	
-	protected final ServerConfiguration configuration;
+	private final ServerConfiguration configuration;
 
 	private List<PropertyChangeListener> listeners;
 
@@ -298,11 +300,21 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 //		System.out.println("Server shutting down");
 	}
 
-
+	/**
+	 * Return the server configuration.
+	 * @return a ServerConfiguration instance
+	 */
 	protected ServerConfiguration getConfiguration() {
 		return configuration;
 	}
 
+	/**
+	 * Return true if the server is a private on.
+	 * @return a boolean
+	 */
+	public boolean isPrivate() {
+		return getConfiguration().isPrivateServer();
+	}
 
 	/**
 	 * This method returns the vector of client threads.
@@ -326,7 +338,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	@Override
 	protected void firstTasksToDo() {
 		addTask(new ServerTask(ServerTaskID.StartReceiverThread, this));
-		if (configuration.isPrivateServer()) {
+		if (isPrivate()) {
 			addTask(new ServerTask(ServerTaskID.CreateFileInfo, this));
 		}
 	}

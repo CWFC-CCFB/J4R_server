@@ -132,7 +132,7 @@ public class ServerConfiguration implements Serializable {
 		this(listiningPorts, internalPorts, 1, 0, true, key, wd);
 	}
 	
-	boolean isPrivateServer() {return isPrivateServer;}
+	protected boolean isPrivateServer() {return isPrivateServer;}
 
 	protected List<ServerSocket> createServerSockets() throws IOException {
 		List<ServerSocket> sockets = new ArrayList<ServerSocket>();

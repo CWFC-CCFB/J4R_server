@@ -101,7 +101,7 @@ public class JavaGatewayServer extends AbstractServer {
 									if (!JavaGatewayServer.this.whoIsWorkingForWho.contains(clientAddress)) {
 										JavaGatewayServer.this.translators.remove(clientAddress);
 									}
-									if (JavaGatewayServer.this.configuration.isPrivateServer()) {
+									if (JavaGatewayServer.this.isPrivate()) {
 										JavaGatewayServer.this.requestShutdown();
 									}
 									break;
@@ -190,6 +190,7 @@ public class JavaGatewayServer extends AbstractServer {
 		return Instance.mainInstance;
 	}
 
+	
 	synchronized REnvironment registerClient(InetAddress clientAddress) {
 		if (!translators.containsKey(clientAddress)) {
 			translators.put(clientAddress, new REnvironment());
@@ -197,23 +198,20 @@ public class JavaGatewayServer extends AbstractServer {
 		return(translators.get(clientAddress));
 	}
 
+	/**
+	 * Return true if the server is public, false if it is private or if no
+	 * server is running. 
+	 * @return a boolean instance
+	 */
+	public static Boolean isPublicServerRunning() {
+		if (Instance != null) {
+			return !Instance.isPrivate();
+		} else {
+			return false;
+		}
+	}
+	
 
-	
-	
-	
-//	/**
-//	 * Hidden constructor for test purpose.
-//	 * 
-//	 * @param servConf a ServerConfiguration instance
-//	 * @param translator an instance that implements the REpiceaCodeTranslator interface
-//	 * @param shutdownOnClosedConnection by default this parameter is set to true so that if the connection is lost, the server is shutdown.
-//	 * @throws Exception
-//	 */
-//	protected JavaGatewayServer(ServerConfiguration servConf, REnvironment translator, boolean shutdownOnClosedConnection) throws Exception {
-//		super(servConf, false);
-//		this.translators = new ConcurrentHashMap<InetAddress, REnvironment>();
-//		this.shutdownOnClosedConnection = shutdownOnClosedConnection;
-//	}
 
 	@Override
 	protected ClientThread createClientThread(AbstractServer.CallReceiverThread receiver, int id) {

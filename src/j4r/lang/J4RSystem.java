@@ -25,10 +25,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import j4r.net.server.JavaGatewayServer;
 import j4r.util.J4RTranslator;
 import j4r.util.J4RTranslator.Language;
 
@@ -234,6 +236,9 @@ public class J4RSystem {
 	 * @throws Exception
 	 */
 	public static List<String> getClassPathURLs() throws Exception {
+		if (JavaGatewayServer.isPublicServerRunning()) {
+			throw new GeneralSecurityException("The method addToClassPath is not accessible for public servers!");
+		}
 		URL[] urls;
 		if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
 			Object urlClassPath = getURLClassPathWithJava9andLaterVersions();
@@ -257,6 +262,9 @@ public class J4RSystem {
 	 * @throws Exception
 	 */
 	public static void addToClassPath(String filename) throws Exception {
+		if (JavaGatewayServer.isPublicServerRunning()) {
+			throw new GeneralSecurityException("The method addToClassPath is not accessible for public servers!");
+		}
 		File f = new File(filename);
 		if (f.exists()) {
 			URL thisURL = f.toURI().toURL();

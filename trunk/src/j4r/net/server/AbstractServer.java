@@ -226,7 +226,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			throw new Exception("Unable to initialize the server");
 		}
 		listeners = new CopyOnWriteArrayList<PropertyChangeListener>();

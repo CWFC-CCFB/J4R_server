@@ -237,7 +237,7 @@ public class J4RSystem {
 	 */
 	public static List<String> getClassPathURLs() throws Exception {
 		if (JavaGatewayServer.isPublicServerRunning()) {
-			throw new GeneralSecurityException("The method addToClassPath is not accessible for public servers!");
+			throw new GeneralSecurityException("The method getClassPathURLs is not accessible for public servers!");
 		}
 		URL[] urls;
 		if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {

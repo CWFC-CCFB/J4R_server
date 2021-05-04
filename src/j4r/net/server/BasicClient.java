@@ -138,7 +138,6 @@ public class BasicClient implements Closeable {
 				return socketWrapper.readObject(timeout);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			close();
 			throw handleException(e);
 		} 
@@ -161,7 +160,6 @@ public class BasicClient implements Closeable {
 				socketWrapper.writeObject(obj);
 			} catch (IOException e) {
 				close();
-				e.printStackTrace();
 			}
 			return readObjectFromServer();
 		}

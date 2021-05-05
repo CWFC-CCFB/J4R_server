@@ -38,7 +38,7 @@ public abstract class ClientThread implements Runnable, ActionListener {
 	
 	private Thread worker;
 	private final Object lock = new Object();
-	
+	protected boolean shutdownCall;
 
 	/**
 	 * Public constructor.
@@ -51,9 +51,14 @@ public abstract class ClientThread implements Runnable, ActionListener {
 		this.workerID = workerID;
 	}
 
+	protected void callShutdown() {
+		shutdownCall = true;
+		interrupt();
+	}
+	
 	@Override
 	public void run() {
-		while (true) {
+		while (!shutdownCall) {
 			try {
 				try {
 					socketWrapper = receiver.clientQueue.take();

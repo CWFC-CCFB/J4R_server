@@ -57,6 +57,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		
 		final ServerSocket emergencySocket;
 		final int port;
+		boolean shutdownCall;
 		
 		BackDoorThread(int port) throws IOException {
 			super("Back door thread");
@@ -68,7 +69,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		
 		@Override
 		public void run() {
-			while (true) {
+			while (!shutdownCall) {
 				SocketWrapper clientSocket = null;
 				try {
 					clientSocket = new TCPSocketWrapper(emergencySocket.accept(), false);
@@ -95,21 +96,34 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 						}
 					}
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					dealWithException(e1);
 				} catch (Exception e2) {
-					e2.printStackTrace();
+					dealWithException(e2);
 				} finally {
 					try {
 						if (clientSocket != null  && !clientSocket.isClosed()) {
 							clientSocket.close();
 						}
 					} catch (IOException e) {
-						e.printStackTrace();
+						dealWithException(e);
 					}
 				}
 			}
 		}
 
+		void callShutdown() {
+			shutdownCall = true;
+			try {
+				emergencySocket.close();
+			} catch (IOException e) {}
+		}
+		
+		void dealWithException(Exception e) {
+			if (!shutdownCall) {
+				e.printStackTrace();
+			}
+		}
+		
 		protected void softExit() {
 			try {
 				Socket socket = new Socket(InetAddress.getLoopbackAddress(), port);
@@ -174,6 +188,25 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				}
 			}
 		}
+		
+		void callShutdown() {
+			shutdownCall = true;
+			clientQueue.clear();
+			try {
+				if (serverSocket != null) {
+					serverSocket.close();
+				}
+			} catch (IOException e) {
+				interrupt();
+			} finally {
+				try {
+					join(5000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
 	}
 
 
@@ -203,7 +236,6 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		clientThreads = new ArrayList<ClientThread>();
 		gcThreads = new ArrayList<ClientThread>();
 		this.whoIsWorkingForWho = new ConcurrentHashMap<ClientThread, InetAddress>();
-//		clientQueue = new LinkedBlockingQueue<SocketWrapper>();
 		callReceiverThreads = new ArrayList<CallReceiverThread>();
 		try {
 			List<ServerSocket> serverSockets = configuration.createServerSockets();
@@ -234,28 +266,24 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	
 	protected boolean checkSecurity(SocketWrapper clientSocket) {
-//		if (configuration.isPrivateServer()) {
-			try {
-				Object obj = clientSocket.readObject();
-				int key = Integer.parseInt(obj.toString());
-				if (configuration.key == key) {
-					clientSocket.writeObject(ServerReply.SecurityChecked);
-					return true;
-				} else {
-					clientSocket.writeObject(ServerReply.SecurityFailed);
-					return false;
-				}
-			} catch (Exception e) {
-				try {
-					clientSocket.writeObject(e);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+		try {
+			Object obj = clientSocket.readObject();
+			int key = Integer.parseInt(obj.toString());
+			if (configuration.key == key) {
+				clientSocket.writeObject(ServerReply.SecurityChecked);
+				return true;
+			} else {
+				clientSocket.writeObject(ServerReply.SecurityFailed);
 				return false;
 			}
-//		} else {
-//			return true;	// for web server 
-//		}
+		} catch (Exception e) {
+			try {
+				clientSocket.writeObject(e);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			return false;
+		}
 	}
 
 
@@ -374,26 +402,31 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	@Override
 	public void requestShutdown() {
-		for (CallReceiverThread t : callReceiverThreads) {
-			t.shutdownCall = true;
-			t.clientQueue.clear();
-			try {
-				if (t.serverSocket != null) {
-					t.serverSocket.close();
-				}
-			} catch (IOException e) {
-				t.interrupt();
-			} finally {
-				try {
-					t.join(5000);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+		List<CallReceiverThread> crt = new ArrayList<CallReceiverThread>();
+		crt.addAll(callReceiverThreads);
+		crt.add(gcReceiverThread);
+		for (CallReceiverThread t : crt) {
+			t.callShutdown();
 		}
-		super.requestShutdown();
+		List<ClientThread> ct = new ArrayList<ClientThread>();
+		ct.addAll(clientThreads);
+		ct.addAll(gcThreads);
+		for (ClientThread t : ct) {
+			t.callShutdown();
+		}
+		backdoorThread.callShutdown();
+ 		super.requestShutdown();
 	}
 
+	@Override
+	protected void shutdown(int shutdownCode) {
+		if (backdoorThread.isAlive()) {
+			backdoorThread.softExit();
+		}
+		if (isPrivate()) {		// private server also shuts down the JVM
+			super.shutdown(shutdownCode);
+		}
+	}
 
 	/*
 	 * This method can be overriden and left empty for webserver.

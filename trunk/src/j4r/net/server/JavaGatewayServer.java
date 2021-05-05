@@ -44,7 +44,7 @@ public class JavaGatewayServer extends AbstractServer {
 	public static final String WD = "-wd";
 	public static final String MEMORY = "-mem";
 	public static final String PortSplitter = ":";
-	public static final String PUBLIC = "-public";	// TODO MF2021-04-29 change this for something else like -public
+	public static final String PUBLIC = "-public";	
 	public static final String KEY = "-key";
 
 	
@@ -78,7 +78,7 @@ public class JavaGatewayServer extends AbstractServer {
 
 		@Override
 		public void run() {
-			while(true) {
+			while(!shutdownCall) {
 				try {
 					firePropertyChange("status", null, "Waiting");
 					socketWrapper = receiver.clientQueue.take();
@@ -129,9 +129,7 @@ public class JavaGatewayServer extends AbstractServer {
 						JavaGatewayServer.this.requestShutdown();
 						break;
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				} catch (InterruptedException e) {}
 			}
 		}
 
@@ -163,7 +161,6 @@ public class JavaGatewayServer extends AbstractServer {
 	
 	protected final ConcurrentHashMap<InetAddress, REnvironment> translators;	
 	protected final boolean shutdownOnClosedConnection;
-	protected boolean bypassShutdownForTesting;	// TODO: MF2021-04-29 Might be deprecated
 	private final Object mainInstance;
 	
 	/**
@@ -219,16 +216,6 @@ public class JavaGatewayServer extends AbstractServer {
 	}
 
 	
-	@Override
-	protected void shutdown(int shutdownCode) {
-		if (backdoorThread.isAlive()) {
-			backdoorThread.softExit();
-		}
-		if (bypassShutdownForTesting) {
-			return;
-		}
-		super.shutdown(shutdownCode);
-	}
 
 	@Override
 	protected void createFileInfoForLocalServer() throws IOException {

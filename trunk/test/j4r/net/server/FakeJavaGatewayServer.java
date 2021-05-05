@@ -28,6 +28,8 @@ public class FakeJavaGatewayServer {
 		ArrayList myArrayList = new ArrayList();
 		JavaGatewayServer server = new JavaGatewayServer(servConf, myArrayList);
 		server.startApplication();
+//		server.requestShutdown();
+//		int u = 0;
 	}
 	
 }

@@ -102,7 +102,6 @@ public class TCPSocketWrapper implements SocketWrapper {
 			close();
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
-		System.out.println("Default encoding " + Charset.defaultCharset().toString());
 //		String incomingMessage = new String(buffer).substring(0, nbBytes);
 		String incomingMessage = new String(buffer, LATIN_CHARSET).substring(0, nbBytes);
 		return incomingMessage;

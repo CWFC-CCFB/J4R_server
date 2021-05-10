@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
  */
 public class TCPSocketWrapper implements SocketWrapper {
 
-	private final Charset Charset_UTF8 = Charset.forName("UTF-8");
+	private final Charset LATIN_CHARSET = Charset.forName("ISO-8859-1");
 	
 	private final byte[] buffer = new byte[100000];
 	private final boolean isJavaObjectExpected;
@@ -102,8 +102,9 @@ public class TCPSocketWrapper implements SocketWrapper {
 			close();
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
+		System.out.println("Default encoding " + Charset.defaultCharset().toString());
 //		String incomingMessage = new String(buffer).substring(0, nbBytes);
-		String incomingMessage = new String(buffer, Charset_UTF8).substring(0, nbBytes);
+		String incomingMessage = new String(buffer, LATIN_CHARSET).substring(0, nbBytes);
 		return incomingMessage;
 	}
 
@@ -113,8 +114,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 	 * @throws IOException
 	 */
 	private void writeString(String str) throws IOException {
-		writeBytes(str.getBytes(Charset_UTF8));
 //		writeBytes(str.getBytes());
+		writeBytes(str.getBytes(LATIN_CHARSET));
 	}
 	
 	private void writeBytes(byte[] buffer) throws IOException {

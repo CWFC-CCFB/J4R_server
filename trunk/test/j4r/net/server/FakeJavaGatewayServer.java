@@ -27,6 +27,7 @@ public class FakeJavaGatewayServer {
 	public static void main(String[] args) throws Exception {
 		String myString = "Chaîne avec des caractères accentués";
 		Charset defaultCharset = Charset.defaultCharset();
+		System.out.println("Default charset is " + defaultCharset.toString());
 		ArrayList myArrayList = new ArrayList();
 		myArrayList.add(myString);
 		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {18000,18001}, new int[] {50000,50001}, 212);

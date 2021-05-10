@@ -26,12 +26,15 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.Charset;
 
 /**
  * The TCPSocketWrapper class handles the output and input of a TCP/IP socket. 
  * @author Mathieu Fortin
  */
 public class TCPSocketWrapper implements SocketWrapper {
+
+	private final Charset Charset_UTF8 = Charset.forName("UTF-8");
 	
 	private final byte[] buffer = new byte[100000];
 	private final boolean isJavaObjectExpected;
@@ -109,6 +112,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 	 * @throws IOException
 	 */
 	private void writeString(String str) throws IOException {
+//		Charset cs = Charset_UTF8;
+//		writeBytes(cs.encode(str).array());
 		writeBytes(str.getBytes());
 	}
 	

@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentHashMap;
 
 import j4r.lang.codetranslator.REnvironment;
@@ -174,6 +175,7 @@ public class JavaGatewayServer extends AbstractServer {
 		this.translators = new ConcurrentHashMap<InetAddress, REnvironment>();
 		this.shutdownOnClosedConnection = servConf.isPrivateServer();	// enable shutdown on close connection for private servers only
 		this.mainInstance = mainInstance;
+//		System.out.println("Default encoding is " + Charset.defaultCharset().toString());
 		Instance = this;
 	}
 

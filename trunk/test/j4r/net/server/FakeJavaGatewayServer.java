@@ -19,13 +19,17 @@
  */
 package j4r.net.server;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class FakeJavaGatewayServer {
 
 	public static void main(String[] args) throws Exception {
-		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {18000,18001}, new int[] {50000,50001}, 212);
+		String myString = "Chaîne avec des caractères accentués";
+		Charset defaultCharset = Charset.defaultCharset();
 		ArrayList myArrayList = new ArrayList();
+		myArrayList.add(myString);
+		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {18000,18001}, new int[] {50000,50001}, 212);
 		JavaGatewayServer server = new JavaGatewayServer(servConf, myArrayList);
 		server.startApplication();
 //		server.requestShutdown();

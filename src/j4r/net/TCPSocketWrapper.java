@@ -102,7 +102,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 			close();
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
-		String incomingMessage = new String(buffer).substring(0, nbBytes);
+//		String incomingMessage = new String(buffer).substring(0, nbBytes);
+		String incomingMessage = new String(buffer, Charset_UTF8).substring(0, nbBytes);
 		return incomingMessage;
 	}
 
@@ -112,9 +113,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 	 * @throws IOException
 	 */
 	private void writeString(String str) throws IOException {
-//		Charset cs = Charset_UTF8;
-//		writeBytes(cs.encode(str).array());
-		writeBytes(str.getBytes());
+		writeBytes(str.getBytes(Charset_UTF8));
+//		writeBytes(str.getBytes());
 	}
 	
 	private void writeBytes(byte[] buffer) throws IOException {

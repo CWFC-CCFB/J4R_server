@@ -25,7 +25,10 @@ import java.util.ArrayList;
 public class FakeJavaGatewayServer {
 
 	public static void main(String[] args) throws Exception {
-		String myString = "Chaîne avec des caractères accentués";
+		String myString = "ChaÃ®ne avec des caractÃ¨res accentuÃ©s";
+		System.out.println(myString);
+//		myString = new String(myString.getBytes(), Charset.forName("ISO-8859-1"));
+		System.out.println(myString);
 		Charset defaultCharset = Charset.defaultCharset();
 		System.out.println("Default charset is " + defaultCharset.toString());
 		ArrayList myArrayList = new ArrayList();

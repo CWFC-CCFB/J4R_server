@@ -22,6 +22,8 @@ package j4r.net;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
+import java.util.List;
 
 /**
  * This interface ensures that the wrapper can read and write and knows whether
@@ -64,4 +66,11 @@ public interface SocketWrapper extends Closeable {
 	 * @return an InetAddress instance
 	 */
 	public InetAddress getInetAddress();
+
+	/**
+	 * Retrieve the encoding of the client.
+	 * @param charsets a List of potential Charset instances
+	 * @return a boolean true if the encoding was identified or false otherwise
+	 */
+	public boolean checkEncoding(List<Charset> charsets) throws IOException;
 }

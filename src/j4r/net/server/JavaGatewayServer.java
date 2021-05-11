@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import j4r.lang.codetranslator.REnvironment;
@@ -36,6 +38,12 @@ import j4r.net.server.BasicClient.ClientRequest;
  * @author Mathieu Fortin 
  */
 public class JavaGatewayServer extends AbstractServer {
+	
+	private static final List<Charset> PotentialCharsets = new ArrayList<Charset>();
+	static {
+		PotentialCharsets.add(Charset.forName("UTF-8"));
+		PotentialCharsets.add(Charset.forName("ISO-8859-1"));
+	}
 	
 	
 	public static final String EXTENSION = "-ext";
@@ -237,6 +245,12 @@ public class JavaGatewayServer extends AbstractServer {
 		writer.write(outputStr);
 		writer.close();
 	}
+
+	@Override
+	protected List<Charset> getPotentialCharsets() {
+		return PotentialCharsets;
+	}
+
 	
 	
 }

@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.List;
 
 /**
  * The TCPSocketWrapper class handles the output and input of a TCP/IP socket. 
@@ -34,7 +35,7 @@ import java.nio.charset.Charset;
  */
 public class TCPSocketWrapper implements SocketWrapper {
 
-	private final Charset LATIN_CHARSET = Charset.forName("ISO-8859-1");
+	private Charset clientCharset = Charset.defaultCharset();
 	
 	private final byte[] buffer = new byte[100000];
 	private final boolean isJavaObjectExpected;
@@ -102,8 +103,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 			close();
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
-//		String incomingMessage = new String(buffer).substring(0, nbBytes);
-		String incomingMessage = new String(buffer, LATIN_CHARSET).substring(0, nbBytes);
+		String incomingMessage = new String(buffer, clientCharset).substring(0, nbBytes);
+//		String incomingMessage = new String(buffer, UTF8_CHARSET).substring(0, nbBytes);
 		return incomingMessage;
 	}
 
@@ -114,7 +115,7 @@ public class TCPSocketWrapper implements SocketWrapper {
 	 */
 	private void writeString(String str) throws IOException {
 //		writeBytes(str.getBytes());
-		writeBytes(str.getBytes(LATIN_CHARSET));
+		writeBytes(str.getBytes(clientCharset));
 	}
 	
 	private void writeBytes(byte[] buffer) throws IOException {
@@ -161,6 +162,23 @@ public class TCPSocketWrapper implements SocketWrapper {
 	@Override
 	public InetAddress getInetAddress() {
 		return getSocket().getInetAddress();
+	}
+
+	@Override
+	public boolean checkEncoding(List<Charset> charsets) throws IOException {
+		int nbBytes = readBytes(buffer);
+		if (nbBytes == -1) {
+			close();
+			throw new IOException("Seems that the connection has been shutdown by the client...");
+		}
+		for (Charset cs : charsets) {
+			String incomingMessage = new String(buffer, cs).substring(0, nbBytes);
+			if (incomingMessage.equals("éèàïû")) {
+				clientCharset = cs;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	

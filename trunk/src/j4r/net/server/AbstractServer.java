@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +46,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		ClosingConnection,
 		Done,
 		SecurityChecked,
-		SecurityFailed}
+		SecurityFailed,
+		EncodingIdentified,
+		EncodingUnidentified}
 
 	
 	/**
@@ -74,7 +77,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				try {
 					clientSocket = new TCPSocketWrapper(emergencySocket.accept(), false);
 					clientSocket.writeObject(ServerReply.CallAccepted);
-					if (AbstractServer.this.checkSecurity(clientSocket)) {
+					if (AbstractServer.this.checkSecurityAndSetEncoding(clientSocket)) {
 						Object request = clientSocket.readObject();
 						if (request.toString().equals("emergencyShutdown")) {
 							if (AbstractServer.this.isPrivate()) {  // emergency shutdown only if the server is private
@@ -169,7 +172,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				while (!shutdownCall) {
 					SocketWrapper clientSocket = new TCPSocketWrapper(serverSocket.accept(), AbstractServer.this.isCallerAJavaApplication);
 					clientSocket.writeObject(ServerReply.CallAccepted);
-					if (AbstractServer.this.checkSecurity(clientSocket)) {
+					if (AbstractServer.this.checkSecurityAndSetEncoding(clientSocket)) {
 						clientQueue.add(clientSocket);
 					}
 				}
@@ -265,12 +268,17 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	}
 
 	
-	protected boolean checkSecurity(SocketWrapper clientSocket) {
+	protected boolean checkSecurityAndSetEncoding(SocketWrapper clientSocket) {
 		try {
 			Object obj = clientSocket.readObject();
 			int key = Integer.parseInt(obj.toString());
 			if (configuration.key == key) {
 				clientSocket.writeObject(ServerReply.SecurityChecked);
+				if (clientSocket.checkEncoding(getPotentialCharsets())) {
+					clientSocket.writeObject(ServerReply.EncodingIdentified);
+				} else {
+					clientSocket.writeObject(ServerReply.EncodingUnidentified);
+				};
 				return true;
 			} else {
 				clientSocket.writeObject(ServerReply.SecurityFailed);
@@ -285,7 +293,8 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			return false;
 		}
 	}
-
+	
+	protected abstract List<Charset> getPotentialCharsets();
 
 	protected abstract ClientThread createClientThread(CallReceiverThread receiverThread, int id);
 		

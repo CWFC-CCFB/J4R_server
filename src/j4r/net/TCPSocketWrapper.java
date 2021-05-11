@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -103,7 +104,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 			close();
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
-		String incomingMessage = new String(buffer, clientCharset).substring(0, nbBytes);
+		String incomingMessage = readStringFromBuffer(nbBytes, clientCharset);
+//		String incomingMessage = new String(buffer, clientCharset).substring(0, nbBytes);
 //		String incomingMessage = new String(buffer, UTF8_CHARSET).substring(0, nbBytes);
 		return incomingMessage;
 	}
@@ -172,7 +174,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
 		for (Charset cs : charsets) {
-			String incomingMessage = new String(buffer, cs).substring(0, nbBytes);
+//			String incomingMessage = new String(buffer, cs).substring(0, nbBytes);
+			String incomingMessage = readStringFromBuffer(nbBytes, cs);
 			if (incomingMessage.equals("éèàïû")) {
 				clientCharset = cs;
 				return true;
@@ -181,5 +184,9 @@ public class TCPSocketWrapper implements SocketWrapper {
 		return false;
 	}
 
-	
+	private String readStringFromBuffer(int nbBytes, Charset cs) {
+		byte[] newArray = Arrays.copyOfRange(buffer, 0, nbBytes);
+		String s = new String(newArray, cs);
+		return s;
+	}
 }

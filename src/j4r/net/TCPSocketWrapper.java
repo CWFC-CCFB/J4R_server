@@ -174,9 +174,8 @@ public class TCPSocketWrapper implements SocketWrapper {
 			throw new IOException("Seems that the connection has been shutdown by the client...");
 		}
 		for (Charset cs : charsets) {
-//			String incomingMessage = new String(buffer, cs).substring(0, nbBytes);
 			String incomingMessage = readStringFromBuffer(nbBytes, cs);
-			if (incomingMessage.equals("éèàïû")) {
+			if (incomingMessage.equals("\u00E9\u00E8\u00E0\u00EF\u00FB")) {
 				clientCharset = cs;
 				return true;
 			}

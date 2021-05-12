@@ -261,8 +261,8 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			}
 
 		} catch (IOException e) {
-//			e.printStackTrace();
-			throw new Exception("Unable to initialize the server");
+			requestShutdown();
+			throw new Exception("Unable to initialize the server: " + e.getMessage());
 		}
 		listeners = new CopyOnWriteArrayList<PropertyChangeListener>();
 	}
@@ -413,7 +413,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	public void requestShutdown() {
 		List<CallReceiverThread> crt = new ArrayList<CallReceiverThread>();
 		crt.addAll(callReceiverThreads);
-		crt.add(gcReceiverThread);
+		if (gcReceiverThread != null) {
+			crt.add(gcReceiverThread);
+		}
 		for (CallReceiverThread t : crt) {
 			t.callShutdown();
 		}
@@ -423,13 +425,15 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		for (ClientThread t : ct) {
 			t.callShutdown();
 		}
-		backdoorThread.callShutdown();
+		if (backdoorThread != null) {
+			backdoorThread.callShutdown();
+		}
  		super.requestShutdown();
 	}
 
 	@Override
 	protected void shutdown(int shutdownCode) {
-		if (backdoorThread.isAlive()) {
+		if (backdoorThread != null && backdoorThread.isAlive()) {
 			backdoorThread.softExit();
 		}
 		if (isPrivate()) {		// private server also shuts down the JVM

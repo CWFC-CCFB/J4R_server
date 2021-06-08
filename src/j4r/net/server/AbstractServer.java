@@ -288,7 +288,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			try {
 				clientSocket.writeObject(e);
 			} catch (IOException e1) {
-				e1.printStackTrace();
+				e.printStackTrace();
 			}
 			return false;
 		}

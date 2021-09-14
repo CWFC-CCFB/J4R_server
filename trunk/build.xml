@@ -15,23 +15,16 @@
 
 
 	<path id="myJARFile">
-		<fileset dir="${ext.dir}">
-			<include name="${project.name}.jar" />
+		<fileset dir="${ext.dir}/${project.name}">
+			<include name="*.jar" />
 		</fileset>
 	</path>
 	
 	<path id="junit">
-		<fileset dir="${ext.dir}">
-			<include name="junit.jar" />
+		<fileset dir="${ext.dir}/junit4">
+			<include name="*.jar" />
 		</fileset>
 	</path>
-
-	<path id="hamcrest">
-		<fileset dir="${ext.dir}">
-			<include name="hamcrest-core.jar" />
-		</fileset>
-	</path>
-
 
 	<!-- ERASE THE BINARY DIRECTORY -->
     <target name="clean">
@@ -40,7 +33,7 @@
 
 
 	<!-- COMPILE SOURCES ONLY -->
-    <target name="compile" description="Compile src only" depends="clean">
+    <target name="compile" description="Compile src only" depends="clean,validate-java-version">
         <mkdir dir="${bin.dir}"/>
 		
         <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="on">
@@ -53,12 +46,11 @@
 
 
 	<!-- COMPILE TESTS -->
-    <target name="compile-test" description="Compile tests">
+    <target name="compile-test" description="Compile tests" depends="validate-java-version">
         <mkdir dir="${bin.dir}"/>
 		
         <javac srcdir="${test.dir}" destdir="${bin.dir}">
 			<classpath>
-				<path refid="repicea"/>
 				<path refid="junit"/>
 			</classpath>
 		</javac>
@@ -77,7 +69,6 @@
         <javac srcdir="${test.dir}" destdir="${bin.dir}">
 			<classpath>
 				<path refid="myJARFile"/>
-				<path refid="repicea"/>
 				<path refid="junit"/>
 			</classpath>
 		</javac>
@@ -90,20 +81,22 @@
 
 	<!-- COMPILE ALL SOURCES AND TESTS -->
     <target name="compile-all" description="Clean and compile src and test" depends="compile,compile-test"/>
-
 	
-	<!-- TEST DEV -->
-	<target name="test" description="Run all JUnit tests" depends="compile-all">
+	
+    <!-- TEST DEV (DEPENDING ON JAVA VERSION WILL CHOOSE THE APPROPRIATE SETUP) -->
+    <target name="test" description="Run all JUnit tests with jar file (development mode)" depends="compile-all,test-java-8,test-after-java-8" />
+
+	<!-- TEST DEV FOR JAVA VERSION 1.8 -->
+	<target name="test-java-8" description="Run all JUnit tests in Java 1.8 (development mode)" if="${is.java.8}">
+        <echo message="Running tests for Java version 1.8" />
 		<mkdir dir="${test.rep.dir}"/>
 		<delete dir="${test.rep.dir}/${project.name}"/>
 		<mkdir dir="${test.rep.dir}/${project.name}"/>
 
-		<junit fork="no" printsummary="yes" showOutput="true" filtertrace="off">
-
+		<junit fork="yes" printsummary="yes" showOutput="true" filtertrace="off">
 			<classpath>
 				<pathelement location="${bin.dir}" />
 				<path refid="junit"/>
-				<path refid="hamcrest"/>
 			</classpath>
 			
 			<formatter type="xml"/>
@@ -116,6 +109,41 @@
 				</fileset>
 			</batchtest>
 		</junit>
+
+		<junitreport todir="${test.rep.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
+			<fileset dir="${test.rep.dir}/${project.name}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.rep.dir}/${project.name}"/>
+		</junitreport>
+	</target>
+	
+	<!-- TEST DEV FOR JAVA VERSIONS GREATER THAN 1.8 -->
+	<target name="test-after-java-8" description="Run all JUnit tests for versions greater than 1.8 (development mode)" if="${is.after.java.8}">
+        <echo message="Running tests for Java version greater than 1.8" />
+		<mkdir dir="${test.rep.dir}"/>
+		<delete dir="${test.rep.dir}/${project.name}"/>
+		<mkdir dir="${test.rep.dir}/${project.name}"/>
+
+		<junit fork="yes" forkmode="once" printsummary="yes" showOutput="true" filtertrace="off">
+            <jvmarg line="--add-opens java.base/jdk.internal.loader=ALL-UNNAMED"/>
+
+			<classpath>
+				<pathelement location="${bin.dir}" />
+				<path refid="junit"/>
+			</classpath>
+			
+			<formatter type="xml"/>
+			
+			<batchtest fork="yes" todir="${test.rep.dir}/${project.name}">
+				<fileset dir="${bin.dir}">
+					<include name="**/*Test.class" />
+					<!-- Do not include inner class -->
+					<exclude name="**/*$*" />
+				</fileset>
+			</batchtest>
+		</junit>
+
 		<junitreport todir="${test.rep.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
 			<fileset dir="${test.rep.dir}/${project.name}">
 				<include name="TEST-*.xml" />
@@ -125,19 +153,20 @@
 	</target>
 
 
-	<!-- TEST PROD -->
-	<target name="test-prod" description="Run all JUnit tests with jar file" depends="jar,compile-prodtest">
+    <!-- TEST PROD (DEPENDING ON JAVA VERSION WILL CHOOSE THE APPROPRIATE SETUP) -->
+ 	<target name="test-prod" description="Run all JUnit tests with jar file (production mode)" depends="jar,compile-prodtest,test-prod-java-8,test-prod-after-java-8" />
+
+	<!-- TEST PROD FOR JAVA VERSION 1.8-->
+	<target name="test-prod-java-8" description="Run all JUnit tests in Java 1.8 (production mode)" if="${is.java.8}">
 		<mkdir dir="${test.prod.dir}"/>
 		<delete dir="${test.prod.dir}/${project.name}"/>
 		<mkdir dir="${test.prod.dir}/${project.name}"/>
 
 		<junit fork="no" printsummary="yes" showOutput="true" filtertrace="off">
-
 			<classpath>
 				<pathelement location="${bin.dir}" />
 				<path refid="myJARFile"/>
 				<path refid="junit"/>
-				<path refid="hamcrest"/>
 			</classpath>
 			
 			<formatter type="xml"/>
@@ -150,11 +179,48 @@
 				</fileset>
 			</batchtest>
 		</junit>
+
 		<junitreport todir="${test.prod.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
 			<fileset dir="${test.prod.dir}/${project.name}">
 				<include name="TEST-*.xml" />
 			</fileset>
 			<report format="frames" todir="${test.prod.dir}/${project.name}"/>
+		</junitreport>
+	</target>
+
+	<!-- TEST PROD FOR JAVA VERSIONs GREATER THAN 1.8-->
+	<target name="test-prod-after-java-8" description="Run all JUnit tests for versions greater than 1.8 (production mode)" if="${is.after.java.8}">
+		<mkdir dir="${test.prod.dir}"/>
+		<delete dir="${test.prod.dir}/${project.name}"/>
+		<mkdir dir="${test.prod.dir}/${project.name}"/>
+
+
+		<junit fork="yes" forkmode="once" printsummary="yes" showOutput="true" filtertrace="off">
+            <jvmarg line="--add-opens java.base/jdk.internal.loader=ALL-UNNAMED"/>
+
+			<classpath>
+				<pathelement location="${bin.dir}" />
+				<path refid="myJARFile"/>
+				<path refid="junit"/>
+			</classpath>
+			
+			<formatter type="xml"/>
+			
+			<batchtest fork="yes" todir="${test.prod.dir}/${project.name}">
+				<fileset dir="${bin.dir}">
+					<include name="**/*Test.class" />
+					<!-- Do not include inner class -->
+					<exclude name="**/*$*" />
+				</fileset>
+			</batchtest>
+		</junit>
+
+		<junitreport todir="${test.prod.dir}/${project.name}" tofile="TESTS-${project.name}.xml">
+			<fileset dir="${test.prod.dir}/${project.name}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.prod.dir}/${project.name}"/>
+
 		</junitreport>
 	</target>
 
@@ -172,7 +238,10 @@
 
 	<!-- CREATE JAR FILE -->
     <target name="jar" depends="compile">
-        <jar destfile="${ext.dir}/${project.name}.jar">
+        <delete dir="${ext.dir}/${project.name}"/>
+        <mkdir dir="${ext.dir}/${project.name}"/>
+
+        <jar destfile="${ext.dir}/${project.name}/${project.name}-${version}.jar">
 			<fileset dir="${bin.dir}"/>
 			<fileset dir="${src.dir}" includes="**/*.java"/>
 			<fileset dir="." includes="COPYING.LESSER.txt"/>
@@ -180,7 +249,7 @@
             <manifest>
                 <attribute name="Built-By" value="Mathieu Fortin"/>
 				<attribute name="Specification-Title" value="${project.description}"/>
-				<attribute name="Specification-Version" value="1.0.0"/>
+				<attribute name="Specification-Version" value="${version}"/>
 				<attribute name="Specification-Vendor" value="${vendor}"/>
 				<attribute name="Implementation-Title" value="${project.name}"/>
 				<attribute name="Implementation-Version" value="build"/>
@@ -189,6 +258,42 @@
 				<attribute name="Class-Path" value="."/>
              </manifest>
         </jar>
+    </target>
+
+	<!-- SET A PROPERTY FOR IF JAVA VERSION IS 1.8 -->
+    <target name="is-java-8">
+        <condition property="is.java.8">
+            <equals arg1="${ant.java.version}" arg2="1.8" />
+        </condition>
+    </target>
+
+	<!-- SET A PROPERTY IF JAVA VERSION IS GREATER THAN 1.8 -->
+    <target name="is-after-java-8">
+        <condition property="is.after.java.8">
+            <or>
+                <equals arg1="${ant.java.version}" arg2="9" />
+                <equals arg1="${ant.java.version}" arg2="10" />
+                <equals arg1="${ant.java.version}" arg2="11" />
+                <equals arg1="${ant.java.version}" arg2="12" />
+                <equals arg1="${ant.java.version}" arg2="13" />
+                <equals arg1="${ant.java.version}" arg2="14" />
+            </or>
+        </condition>
+    </target>
+
+	<!-- SET A PROPERTY IF JAVA VERSION IS EQUAL TO OR GREATER THAN 1.8 -->
+    <target name="check-java-version" depends="is-java-8,is-after-java-8">
+        <condition property="is.java.version.ok">
+            <or>
+                <equals arg1="${is.java.8}" arg2="true" />
+                <equals arg1="${is.after.java.8}" arg2="true" />
+            </or>
+        </condition>
+    </target>
+
+   	<!-- ENSURE THAT THE JAVA VERSION IS EQUAL TO OR GREATER THAN 1.8 -->
+    <target name="validate-java-version" depends="check-java-version" unless="${is.java.version.ok}">
+        <fail message="Unsupported Java version: ${ant.java.version}. Make sure that the Java version is 1.8 or greater."/>
     </target>
 
 

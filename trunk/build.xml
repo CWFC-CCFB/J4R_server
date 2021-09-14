@@ -20,7 +20,7 @@
 		</fileset>
 	</path>
 	
-		<path id="junit">
+	<path id="junit">
 		<fileset dir="${ext.dir}">
 			<include name="junit.jar" />
 		</fileset>

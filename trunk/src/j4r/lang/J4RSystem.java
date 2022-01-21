@@ -22,7 +22,6 @@ package j4r.lang;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -299,8 +298,12 @@ public class J4RSystem {
 			Field field = cl.getClass().getDeclaredField("ucp");
 			field.setAccessible(true);
 			return field.get(cl);
-		} catch (InaccessibleObjectException e) {
-			throw new GeneralSecurityException("Java " + J4RSystem.jreVersion + " allows dynamic classpaths under certains conditions. You need to specify the JVM option --add-opens java.base/jdk.internal.loader=ALL-UNNAMED .");
+		} catch (Exception e1) {
+			Class clazz = Class.forName("java.lang.reflect.InaccessibleObjectException");
+			if (clazz.isAssignableFrom(e1.getClass())) {
+				throw new GeneralSecurityException("Java " + J4RSystem.jreVersion + " allows dynamic classpaths under certains conditions. You need to specify the JVM option --add-opens java.base/jdk.internal.loader=ALL-UNNAMED .");
+			} 
+			throw e1;
 		} 
 	}
 	

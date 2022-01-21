@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -238,21 +237,24 @@ public class J4RSystem {
 	public static List<String> getClassPathURLs() throws Exception {
 		if (JavaGatewayServer.isPublicServerRunning()) {
 			throw new GeneralSecurityException("The method getClassPathURLs is not accessible for public servers!");
-		}
-		URL[] urls;
-		if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
-			Object urlClassPath = getURLClassPathWithJava9andLaterVersions();
-			Method met = urlClassPath.getClass().getMethod("getURLs");
-			urls = (URL[]) met.invoke(urlClassPath);
 		} else {
-			URLClassLoader cl = (URLClassLoader) ClassLoader.getSystemClassLoader();
-			urls = cl.getURLs();
+			String[] classPathURLs = System.getProperty("java.class.path").split(Character.toString(File.pathSeparatorChar));
+			return Arrays.asList(classPathURLs);
 		}
-		ArrayList<String> urlStrings = new ArrayList<String>();
-		for (URL url : urls) {
-			urlStrings.add(url.toString());
-		}
-		return urlStrings;
+//		URL[] urls;
+//		if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
+//			Object urlClassPath = getURLClassPathWithJava9to15Versions();
+//			Method met = urlClassPath.getClass().getMethod("getURLs");
+//			urls = (URL[]) met.invoke(urlClassPath);
+//		} else {
+//			URLClassLoader cl = (URLClassLoader) ClassLoader.getSystemClassLoader();
+//			urls = cl.getURLs();
+//		}
+//		ArrayList<String> urlStrings = new ArrayList<String>();
+//		for (URL url : urls) {
+//			urlStrings.add(url.toString());
+//		}
+//		return urlStrings;
 	}
 	
 	/**
@@ -270,8 +272,10 @@ public class J4RSystem {
 			URL thisURL = f.toURI().toURL();
 			Object target;
 			Class<?> targetClass;
-			if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
-				target = getURLClassPathWithJava9andLaterVersions();
+			if (J4RSystem.isCurrentJVMLaterThanThisVersion("15.9")) {
+				throw new GeneralSecurityException("Java " + getJVMVersion() + " does not support dynamic classpaths. The library should be loaded through the JVM classpath argument.");
+			} else if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0") && J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
+				target = getURLClassPathWithJava9to15Versions();
 				targetClass = target.getClass();
 			} else {
 				target = ClassLoader.getSystemClassLoader();
@@ -288,7 +292,7 @@ public class J4RSystem {
 	
 	
 	
-	private final static Object getURLClassPathWithJava9andLaterVersions() throws Exception {
+	private final static Object getURLClassPathWithJava9to15Versions() throws Exception {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 		Field field = cl.getClass().getDeclaredField("ucp");
 		field.setAccessible(true);

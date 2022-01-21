@@ -22,6 +22,7 @@ package j4r.lang;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -294,9 +295,13 @@ public class J4RSystem {
 	
 	private final static Object getURLClassPathWithJava9to15Versions() throws Exception {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		Field field = cl.getClass().getDeclaredField("ucp");
-		field.setAccessible(true);
-		return field.get(cl);
+		try {
+			Field field = cl.getClass().getDeclaredField("ucp");
+			field.setAccessible(true);
+			return field.get(cl);
+		} catch (InaccessibleObjectException e) {
+			throw new GeneralSecurityException("Java " + J4RSystem.jreVersion + " allows dynamic classpaths under certains conditions. You need to specify the JVM option --add-opens java.base/jdk.internal.loader=ALL-UNNAMED .");
+		} 
 	}
 	
 	

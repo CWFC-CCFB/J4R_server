@@ -542,6 +542,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				met = findNearestMethod(clazz, methodName, parameterTypes);
 			}
 		} 			
+		met.setAccessible(true);	// must be accessible in some circumstances such as size() for Arrays$ArrayList
 
 		if (lookingForStaticMethod) {	
 			if (!Modifier.isStatic(met.getModifiers())) {		// checks if the method is truly static or throws an exception otherwise
@@ -880,8 +881,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return wrappers;
 	}
 
-	
-	
 	private static String J4rVersion = "1.1.1";
 	
 	/**

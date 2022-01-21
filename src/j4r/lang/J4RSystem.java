@@ -242,7 +242,11 @@ public class J4RSystem {
 		URL[] urls;
 		if (J4RSystem.isCurrentJVMLaterThanThisVersion("15.9")) {
 			String[] classPathURLs = System.getProperty("java.class.path").split(Character.toString(File.pathSeparatorChar));
-			return Arrays.asList(classPathURLs);
+			List<String> urlStrings = new ArrayList<String>();
+			for (String url : classPathURLs) {
+				urlStrings.add(url);
+			}
+			return urlStrings;
 		} else if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
 			Object urlClassPath = getURLClassPathWithJava9to15Versions();
 			Method met = urlClassPath.getClass().getMethod("getURLs");
@@ -251,7 +255,7 @@ public class J4RSystem {
 			URLClassLoader cl = (URLClassLoader) ClassLoader.getSystemClassLoader();
 			urls = cl.getURLs();
 		}
-		ArrayList<String> urlStrings = new ArrayList<String>();
+		List<String> urlStrings = new ArrayList<String>();
 		for (URL url : urls) {
 			urlStrings.add(url.toString());
 		}

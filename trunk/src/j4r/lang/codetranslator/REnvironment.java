@@ -882,6 +882,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 
 	
 	
+	private static String J4rVersion = "1.1.1";
+	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server.
 	 * @param args
@@ -895,13 +897,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
-				String architecture = J4RSystem.getJavaArchitecture();
-				String classPath;
-				if (architecture.equals("32")) {
-					classPath = "j4r_x86.jar";
-				} else {
-					classPath = "j4r.jar";
-				}
+				String classPath = "j4r-" + J4rVersion + ".jar";
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
 					if (new File(extensionPath).exists()) {

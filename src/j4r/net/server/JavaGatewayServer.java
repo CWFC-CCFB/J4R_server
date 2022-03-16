@@ -55,6 +55,7 @@ public class JavaGatewayServer extends AbstractServer {
 	public static final String PortSplitter = ":";
 	public static final String PUBLIC = "-public";	
 	public static final String KEY = "-key";
+	public static final String HEADLESS = "-headless";
 
 	
 	/**

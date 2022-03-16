@@ -65,6 +65,7 @@ public final class JavaProcess extends AbstractIndependentProcess {
 		@Deprecated
 		SystemClassLoader,
 		SplashWindow,
+		Headless,
 		OpenInternalLoader};
 	
 	private List<String> commands;
@@ -181,6 +182,18 @@ public final class JavaProcess extends AbstractIndependentProcess {
 		}
 	}
 
+	/**
+	 * Set the headless mode. <br>
+	 * <br>
+	 * The headless mode is a system configuration with no mouse, display and keyboard. 
+	 * @param b
+	 */
+	public void setHeadless(boolean b) {
+		if (b) {
+			jvmOptions.put(JVM_OPTION.Headless, "-Djava.awt.headless=true");
+		}
+	}
+	
 	/**
 	 * Open the internal loader for versions later than 8.
 	 * @param bool it is set to false by default

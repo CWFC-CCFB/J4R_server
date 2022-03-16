@@ -107,6 +107,8 @@ jar {
                    "Implementation-Title": "J4R server",
                    "Implementation-Version": project.version,		
                    "Implementation-Vendor": "Canadian Wood Fibre Centre",
+                   "Main-Class": "j4r.lang.codetranslator.REnvironment",
+					"Class-Path": "."
                    )
     }
     

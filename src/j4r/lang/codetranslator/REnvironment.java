@@ -41,11 +41,11 @@ import j4r.multiprocess.JavaProcessWrapper;
 import j4r.net.server.BasicClient;
 import j4r.net.server.JavaGatewayServer;
 import j4r.net.server.ServerConfiguration;
+import j4r.util.JarUtility;
+import j4r.util.ObjectUtility;
 
 @SuppressWarnings("serial")
 public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<Object>>> { // first integer : hahscode, second integer : collider
-
-
 	
 	private static final String FIRSTCALL = "-firstcall";
 	
@@ -55,21 +55,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	
 	public static final String ColliderSplitter = "_";
 	
-	
-//	private static final String R_NUMERIC_TOKEN = "numeric";
-//	private static final String R_INTEGER_TOKEN = "integer";
-//	private static final String R_LOGICAL_TOKEN = "logical";
-//	private static final String R_CHARACTER_TOKEN = "character";
-//	private static final String R_JAVA_OBJECT_TOKEN = "JavaObject";
-//	private static final String R_JAVA_LIST_TOKEN = "JavaList";
-	
 	private static final String R_NUMERIC_TOKEN = "nu";
 	private static final String R_INTEGER_TOKEN = "in";
 	private static final String R_LOGICAL_TOKEN = "lo";
 	private static final String R_CHARACTER_TOKEN = "ch";
 	private static final String R_JAVA_OBJECT_TOKEN = "JO";
 	private static final String R_JAVA_LIST_TOKEN = "JL";
-	
 	
 	private final static Map<String, Class<?>> PrimitiveTypeMap = new HashMap<String, Class<?>>();
 	static {
@@ -231,7 +222,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	private static String ConstructNullCode = "conu";
 	private static String ConstructArrayCode = "coar";
 	private static String MethodCode = "method";
-//	private static String SynchronizeEnvironment = "sync";
 	private static String ClassInfo = "cli";
 	private static String FlushInstances = "flush";
 	private static String InternalMapSize = "size";
@@ -240,9 +230,13 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	private static final Random RANDOM = new Random();
 	
 
-	
+	/**
+	 * Process the request.
+	 * @param request a String 
+	 * @return an Object
+	 * @throws Exception
+	 */
 	public Object processCode(String request) throws Exception {
-//		return null;
 		String[] requestStrings = request.split(MainSplitter);
 		if (requestStrings[0].startsWith(ConstructCode)) {	// can be either create, createarray or createnull here
 			return createObjectFromRequestStrings(requestStrings); 
@@ -252,8 +246,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			return processField(requestStrings);
 		} else if (requestStrings[0].equals(ClassInfo)) {
 			return getClassInfo(requestStrings);
-//		} else if (requestStrings[0].equals(SynchronizeEnvironment)) {
-//			return synchronizeEnvironment(requestStrings);
 		} else if (requestStrings[0].equals(FlushInstances)) {
 			return flushTheseObjects(requestStrings);
 		} else if (requestStrings[0].equals(InternalMapSize)) {
@@ -305,59 +297,26 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 
 
-//	private Object synchronizeEnvironment(String[] requestStrings) {
-//		Map<Integer, Object> actualMap = new HashMap<Integer, Object>();
-//		for (int i = 1; i < requestStrings.length; i++) {
-//			List<ParameterWrapper> wrappers = findObjectInEnvironment(requestStrings[i]);
-//			if (wrappers != null) {
-//				for (ParameterWrapper wrapper : wrappers) {
-//					Object caller = wrapper.value;
-//					actualMap.put(System.identityHashCode(caller), caller);
-//				}
-//			}
-//		}
-//		Map<Integer, Object> toBeRemoved = new HashMap<Integer, Object>();
-//		for (Object value : values()) {
-//			if (!actualMap.containsKey(System.identityHashCode(value))) {
-//				toBeRemoved.put(System.identityHashCode(value), value);
-//			}
-//		}
-////		for (Object value : toBeRemoved.values()) {
-////			remove(System.identityHashCode(value), value);
-////		}
-////		JavaObjectList outputList = new JavaObjectList();
-////		registerMethodOutput(size(), outputList);
-////		return outputList;
-//		return innerFlush(toBeRemoved);
-//	}
-
 	private Object flushTheseObjects(String[] requestStrings) {
 		String prefix = "java.objecthashcode";
 		if (requestStrings[1].startsWith(prefix)) {
 			String[] newArgs = requestStrings[1].substring(prefix.length()).split(SubSplitter);
-//			int nbRemoved = 0;
 			for (int i = 0; i < newArgs.length; i++) {
 				String[] hashcodeAndColliderForThisJavaObject = newArgs[i].split(ColliderSplitter);
-//				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
 				int hashcodeForThisJavaObject = Integer.parseInt(hashcodeAndColliderForThisJavaObject[0]);
 				int collider = Integer.parseInt(hashcodeAndColliderForThisJavaObject[1]);
 				if (containsKey(hashcodeForThisJavaObject)) {
-//					remove(hashcodeForThisJavaObject);
-//					List<Object> innerList = get(hashcodeForThisJavaObject);
 					Map<Integer, List<Object>> innerMap = get(hashcodeForThisJavaObject);
 					List<Object> innerList = innerMap.get(collider);
 					innerList.remove(0);
 					if (innerList.isEmpty()) {
-//						remove(hashcodeForThisJavaObject);
 						innerMap.remove(collider);
 						if (innerMap.isEmpty()) {
 							remove(hashcodeForThisJavaObject);
 						}
 					}
-//					nbRemoved++;
 				}
 			}
-//			System.out.println("Nb removed " + nbRemoved + "/" + newArgs.length);
 		}
 		return null;
 	}
@@ -378,10 +337,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				int hashcodeForThisJavaObject = Integer.parseInt(hashcodePlusColliderForThisJavaObject[0]);
 				int collider = Integer.parseInt(hashcodePlusColliderForThisJavaObject[1]);
 				if (containsKey(hashcodeForThisJavaObject)) {
-//					Object value = get(hashcodeForThisJavaObject);
 					Map<Integer, List<Object>> innerMap = get(hashcodeForThisJavaObject);
 					Object value = innerMap.get(collider).get(0);
-//					Object value = get(hashcodeForThisJavaObject).get(0);
 					Class<?> type;
 					if (value instanceof NullWrapper) {
 						type = ((NullWrapper) value).type;
@@ -414,7 +371,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			if (wrappers.size() == 1 && caller.type.equals(String.class)) { // could be a call to a static method
 				try {
 					String className = caller.value.toString();
-//					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
 					clazz = Class.forName(className);
 					lookingForStaticMethod = true;
 					wrappers = new ArrayList<ParameterWrapper>();
@@ -479,7 +435,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 						k = 0;
 					}
 					field.set(wrappers.get(k).value, parameters.getParameterArray(j)[0]);
-//					registerMethodOutput(result, outputList);
 				}		
 			}
 		}
@@ -512,7 +467,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			if (wrappers.size() == 1 && caller.type.equals(String.class)) { // could be a call to a static method
 				try {
 					String className = caller.value.toString();
-//					clazz = ClassLoader.getSystemClassLoader().loadClass(className);
 					clazz = Class.forName(className);
 					lookingForStaticMethod = true;
 					wrappers = new ArrayList<ParameterWrapper>();
@@ -627,7 +581,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	private void registerMethodOutput(Object result, JavaObjectList outputList) {
 		if (result != null) {
 			if (!ReflectUtility.JavaWrapperToPrimitiveMap.containsKey(result.getClass())) {
-//				put(System.identityHashCode(result), result);
 				int collider = registerInMap(result);
 				outputList.add(new ParameterWrapper(result.getClass(), result, collider));
 			} else {
@@ -673,14 +626,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			innerMap.put(collider, refList);
 			return collider;
 		}
-//		List<Object> refList = get(hashCode);
-//		if (!refList.isEmpty() && !refList.get(0).equals(result)) {
-//			String refClass = refList.get(0).getClass().getSimpleName();
-//			String objClass = result.getClass().getSimpleName();
-//			throw new InvalidParameterException("A hash collision occurred: instance of " + refClass + " expected but was " + objClass);
-//		} else {
-//			get(hashCode).add(result);
-//		}
 	}
 	
 	private double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
@@ -759,7 +704,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		if (ReflectUtility.PrimitiveTypeMap.containsKey(className)) {
 			clazz = ReflectUtility.PrimitiveTypeMap.get(className);
 		} else {
-//			clazz = ClassLoader.getSystemClassLoader().loadClass(className);
 			clazz = Class.forName(className);
 		}
 		
@@ -822,7 +766,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	
 	
 	private void registerNewInstance(Object newInstance, JavaObjectList outputList) {
-//		put(System.identityHashCode(newInstance), newInstance);
 		int collider = registerInMap(newInstance);
 		outputList.add(new ParameterWrapper(newInstance.getClass(), newInstance, collider));
 	}
@@ -881,7 +824,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return wrappers;
 	}
 
-	private static String J4rVersion = "1.1.1";
+	private static int[] parsePorts(String str) {
+		String[] p = str.split(JavaGatewayServer.PortSplitter);
+		int[] ports = new int[p.length];
+		for (int i = 0; i < p.length; i++) {
+			ports[i] = Integer.parseInt(p[i]);
+		}
+		return ports;
+	}
 	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server.
@@ -896,7 +846,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
-				String classPath = "j4r-" + J4rVersion + ".jar";
+				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
+//				String classPath = "j4r-" + J4rVersion + ".jar";
+				String classPath = jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1); 
+				System.out.println("ClassPath = " + jarFilename);
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
 					if (new File(extensionPath).exists()) {
@@ -958,6 +911,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 					}
 				}
 				
+				String headlessModeStr = J4RSystem.retrieveArgument(JavaGatewayServer.HEADLESS, arguments);
+				boolean headlessMode = true;
+				if (headlessModeStr != null && headlessModeStr.equals("false")) {
+					headlessMode = false;
+				}
+				
 				File jarFile = new File(REnvironment.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 				File rootPath = jarFile.getParentFile();
 
@@ -967,6 +926,9 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				rGatewayProcess.setClassPath(classPath);
 				if (memorySize != null) {
 					rGatewayProcess.setJVMMemory(memorySize);
+				}
+				if (headlessMode) {
+					rGatewayProcess.setHeadless(true);
 				}
 				if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8")) {
 					rGatewayProcess.setOpenModuleForVersionsLaterThan8Enabled(true);
@@ -1012,13 +974,5 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
-	private static int[] parsePorts(String str) {
-		String[] p = str.split(JavaGatewayServer.PortSplitter);
-		int[] ports = new int[p.length];
-		for (int i = 0; i < p.length; i++) {
-			ports[i] = Integer.parseInt(p[i]);
-		}
-		return ports;
-	}
 	
 }

@@ -1,0 +1,135 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+group = 'org'
+version = project.version
+
+import org.tmatesoft.svn.core.wc.*
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(8))
+  }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+
+/*
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+*/
+
+println "Using java version " + JavaVersion.current()
+
+sourceSets {
+    main {    	
+        java {
+            srcDirs 'src'            
+        }
+        
+        resources {
+			srcDirs= ['src']
+			exclude '**/*.java'
+		}
+		
+		output.resourcesDir = "$buildDir/classes/java/$name"
+    }
+
+    test {
+        java {
+            srcDirs 'test'
+        }
+                
+        resources {
+			srcDirs= ['test']
+			exclude '**/*.java'
+		}
+		
+		output.resourcesDir = "$buildDir/classes/java/$name"
+    }               
+}
+
+// make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
+// make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
+dependencies {
+    testImplementation "junit:junit:4.12"    
+}
+
+ 
+compileJava {
+	project.version=j4r_serverVersion
+	println "Building " + rootProject.name + " v" + project.version
+}
+
+test {
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+
+    // set heap size for the test JVM(s)
+    maxHeapSize = "2048m"
+    
+//    exclude '**/ProductionEnvironmentTest.class'
+}
+
+task integrationTest(type: Test) {
+	description = 'Runs the integration tests (unit tests run using the produced JAR file)'
+    group = 'verification'
+	dependsOn jar
+	
+	include '**/*.class'
+	
+	testLogging.showStandardStreams = true
+    testClassesDirs = sourceSets.test.output.classesDirs
+        
+    // set classpath to test classes + test dependencies + JAR
+    classpath = project.sourceSets.test.output + configurations.testRuntimeClasspath + files(jar.archiveFile) 
+    outputs.upToDateWhen { false }
+    mustRunAfter test
+    maxHeapSize = "2048m"
+}
+
+check.dependsOn integrationTest
+
+jar {
+	 manifest {
+        attributes("Built-By": "Mathieu Fortin and Jean-Francois Lavoie",
+        		   "Specification-Title": "J4R server",
+	       		   "Specification-Version": project.version,                   
+                   "Specification-Vendor": "Canadian Wood Fibre Centre",
+                   "Implementation-Title": "J4R server",
+                   "Implementation-Version": project.version,		
+                   "Implementation-Vendor": "Canadian Wood Fibre Centre",
+                   )
+    }
+    
+	into ('/') {
+		from files(['./README.md', './COPYING.LESSER.txt'])			
+	}
+	
+	// include all java files from main sourceset into the jar file (resources are already included)
+	from sourceSets.main.allJava		
+}
+
+task deleteInstallFolder(type: Delete) {
+  delete "${installDir}"  
+}
+
+task install(type: Copy) {
+	description = 'Copies the output jar to installation folder.'
+	group = 'build'
+	dependsOn jar,deleteInstallFolder,integrationTest
+	from configurations.default
+	from jar
+	into "${installDir}"
+}
+
+
+ 

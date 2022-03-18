@@ -55,12 +55,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	
 	public static final String ColliderSplitter = "_";
 	
-	private static final String R_NUMERIC_TOKEN = "nu";
-	private static final String R_INTEGER_TOKEN = "in";
-	private static final String R_LOGICAL_TOKEN = "lo";
-	private static final String R_CHARACTER_TOKEN = "ch";
-	private static final String R_JAVA_OBJECT_TOKEN = "JO";
-	private static final String R_JAVA_LIST_TOKEN = "JL";
+	protected static final String R_NUMERIC_TOKEN = "nu";
+	protected static final String R_INTEGER_TOKEN = "in";
+	protected static final String R_LOGICAL_TOKEN = "lo";
+	protected static final String R_CHARACTER_TOKEN = "ch";
+	protected static final String R_JAVA_OBJECT_TOKEN = "JO";
+	protected static final String R_JAVA_LIST_TOKEN = "JL";
+	
+	protected static final String R_JAVA_OBJECT_HASHCODE_PREFIX = "java.objecthashcode";
 	
 	private final static Map<String, Class<?>> PrimitiveTypeMap = new HashMap<String, Class<?>>();
 	static {
@@ -155,7 +157,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
-	private class ParameterWrapper {
+	protected class ParameterWrapper {
 		
 		final Class<?> type;
 		final Object value;
@@ -217,15 +219,15 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		
 	}
 		
-	private static String ConstructCode = "co";
-	private static String ConstructNullArrayCode = "cona";
-	private static String ConstructNullCode = "conu";
-	private static String ConstructArrayCode = "coar";
-	private static String MethodCode = "method";
-	private static String ClassInfo = "cli";
-	private static String FlushInstances = "flush";
-	private static String InternalMapSize = "size";
-	private static String FieldCode = "field";
+	protected final static String ConstructCode = "co";
+	protected final static String ConstructNullArrayCode = "cona";
+	protected final static String ConstructNullCode = "conu";
+	protected final static String ConstructArrayCode = "coar";
+	protected final static String MethodCode = "method";
+	protected final static String ClassInfo = "cli";
+	protected final static String FlushInstances = "flush";
+	protected final static String InternalMapSize = "size";
+	protected final static String FieldCode = "field";
 
 	private static final Random RANDOM = new Random();
 	
@@ -298,7 +300,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 
 
 	private Object flushTheseObjects(String[] requestStrings) {
-		String prefix = "java.objecthashcode";
+		String prefix = R_JAVA_OBJECT_HASHCODE_PREFIX;
 		if (requestStrings[1].startsWith(prefix)) {
 			String[] newArgs = requestStrings[1].substring(prefix.length()).split(SubSplitter);
 			for (int i = 0; i < newArgs.length; i++) {
@@ -327,9 +329,9 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return outputList;
 	}
 	
-	private List<ParameterWrapper> findObjectInEnvironment(String string) {
+	protected List<ParameterWrapper> findObjectInEnvironment(String string) {
 		List<ParameterWrapper> wrappers = new ArrayList<ParameterWrapper>();
-		String prefix = "java.objecthashcode";
+		String prefix = R_JAVA_OBJECT_HASHCODE_PREFIX;
 		if (string.startsWith(prefix)) {
 			String[] newArgs = string.substring(prefix.length()).split(SubSplitter);
 			for (int i = 0; i < newArgs.length; i++) {

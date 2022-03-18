@@ -41,7 +41,7 @@ import j4r.net.server.ServerTask.ServerTaskID;
 
 public abstract class AbstractServer extends AbstractGenericEngine implements PropertyChangeListener {
 
-	protected static enum ServerReply {IAmBusyCallBackLater, 
+	public static enum ServerReply {IAmBusyCallBackLater, 
 		CallAccepted, 
 		ClosingConnection,
 		Done,

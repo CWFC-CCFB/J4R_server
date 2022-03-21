@@ -961,14 +961,21 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			}
 			String publicMode = J4RSystem.retrieveArgument(JavaGatewayServer.PUBLIC, arguments);
 			int key;
+			boolean isPublic = false;
 			if (publicMode != null && publicMode.trim().toLowerCase().equals("on")) {
+				isPublic = true;
 				String keyStr = J4RSystem.retrieveArgument(JavaGatewayServer.KEY, arguments);
 				key = Integer.parseInt(keyStr);
 			} else {
 				key = generateSecurityKey();
 			}
-			ServerConfiguration conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments));
-			server = new JavaGatewayServer(conf, null);	// null: no need for a main instance in the case of a private server
+			ServerConfiguration conf;
+			if (isPublic) {
+ 				conf = new ServerConfiguration(1, 10, listeningPorts, backdoorports, key);
+			} else {
+ 				conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments));
+			}
+			server = new JavaGatewayServer(conf, null);	// null: no need for a main instance 
 			server.startApplication();
 		} catch (Exception e) {
 			System.err.println("Error:" + e.getMessage());

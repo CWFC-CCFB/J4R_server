@@ -252,24 +252,24 @@ public class JavaGatewayServer extends AbstractServer {
 		return PotentialCharsets;
 	}
 
-	/**
-	 * This entry point can be used to start the J4R server in standalone mode for Capsis4R usage
-	 *  
-	 */
-	public static void main(String[] args) throws Exception {
-	
-		if (args.length < 4) {
-			System.out.print("Usage : JavaGatewayServer port backdoorPort garbageCollectorPort key");
-		}
-		
-		int port = Integer.valueOf(args[0]);
-		int portBackDoor = Integer.valueOf(args[1]);
-		int portGarbageCollect = Integer.valueOf(args[2]);
-		int key = Integer.valueOf(args[3]);
-		
-		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {port}, new int[] {portBackDoor, portGarbageCollect}, key);
-		JavaGatewayServer server = new JavaGatewayServer(servConf, null);
-		server.startApplication();
-	}
+//	/**
+//	 * This entry point can be used to start the J4R server in standalone mode for Capsis4R usage
+//	 *  
+//	 */
+//	public static void main(String[] args) throws Exception {
+//	
+//		if (args.length < 4) {
+//			System.out.print("Usage : JavaGatewayServer port backdoorPort garbageCollectorPort key");
+//		}
+//		
+//		int port = Integer.valueOf(args[0]);
+//		int portBackDoor = Integer.valueOf(args[1]);
+//		int portGarbageCollect = Integer.valueOf(args[2]);
+//		int key = Integer.valueOf(args[3]);
+//		
+//		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {port}, new int[] {portBackDoor, portGarbageCollect}, key);
+//		JavaGatewayServer server = new JavaGatewayServer(servConf, null);
+//		server.startApplication();
+//	}
 	
 }

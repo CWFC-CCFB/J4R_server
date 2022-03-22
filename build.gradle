@@ -5,6 +5,9 @@ apply plugin: 'idea'
 group = 'org'
 version = project.version
 
+def buildForCapsis4R = findProperty('buildForCapsis4R') ?: 'false'
+def capsisPath = findProperty('capsisPath') ?: null
+
 import org.tmatesoft.svn.core.wc.*
 
 java {
@@ -61,6 +64,12 @@ sourceSets {
 // make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
 dependencies {
     testImplementation "junit:junit:4.12"    
+    
+     if (capsisPath != null) {
+        println('Using Capsis installation in ' + capsisPath)
+        runtimeOnly files("${capsisPath}/class/")
+        runtimeOnly fileTree(dir: "${capsisPath}/ext", include: "*.jar")        
+    }
 }
 
  
@@ -99,22 +108,45 @@ task integrationTest(type: Test) {
 check.dependsOn integrationTest
 
 jar {
-	 manifest {
-        attributes("Built-By": "Mathieu Fortin and Jean-Francois Lavoie",
-        		   "Specification-Title": "J4R server",
-	       		   "Specification-Version": project.version,                   
-                   "Specification-Vendor": "Canadian Wood Fibre Centre",
-                   "Implementation-Title": "J4R server",
-                   "Implementation-Version": project.version,		
-                   "Implementation-Vendor": "Canadian Wood Fibre Centre",
+
+    if (capsisPath == null) {
+        println "Building standard JAR"
+        manifest {
+            attributes("Built-By": "Mathieu Fortin and Jean-Francois Lavoie",
+                    "Specification-Title": "J4R server",
+                    "Specification-Version": project.version,
+                    "Specification-Vendor": "Canadian Wood Fibre Centre",
+                    "Implementation-Title": "J4R server",
+                    "Implementation-Version": project.version,
+                    "Implementation-Vendor": "Canadian Wood Fibre Centre",
                    "Main-Class": "j4r.lang.codetranslator.REnvironment",
-					"Class-Path": "."
+                   "Class-Path": "."
                    )
+
+            into ('/') {
+                from files(['./README.md', './COPYING.LESSER.txt'])
+            }
+        }
+    } else {
+        println "Building JAR including capsis in " + "${capsisPath}"
+        manifest {
+            attributes("Built-By": "Mathieu Fortin and Jean-Francois Lavoie",
+                    "Specification-Title": "J4R server",
+                    "Specification-Version": project.version,
+                    "Specification-Vendor": "Canadian Wood Fibre Centre",
+                    "Implementation-Title": "J4R server",
+                    "Implementation-Vendor": "Canadian Wood Fibre Centre",
+                    "Main-Class": "j4r.lang.codetranslator.REnvironment",
+                    // get all files from compileClasspath and prefix them
+                    // with /ext and replace ext/class by correct class/ entry into manifest classpath
+                    "Class-Path": project.configurations.runtimeClasspath.collect { "ext/" + it.getName() }.join(' ').replace("ext/class", "class/")
+            )
+
+            into('/') {
+                from files(['./README.md', './COPYING.LESSER.txt'])
+            }
+        }
     }
-    
-	into ('/') {
-		from files(['./README.md', './COPYING.LESSER.txt'])			
-	}
 	
 	// include all java files from main sourceset into the jar file (resources are already included)
 	from sourceSets.main.allJava		
@@ -131,6 +163,18 @@ task install(type: Copy) {
 	from configurations.default
 	from jar
 	into "${installDir}"
+}
+
+task installIntoCapsisDirectory(type: Copy) {
+    description = 'Copies the output jar to CAPSIS installation folder.'
+    group = 'build'
+    dependsOn jar,integrationTest
+    from configurations.default
+    from jar
+    doFirst {
+        if(capsisPath == null) throw new GradleException("capsisPath property is not set.")
+    }
+    into "${capsisPath}"
 }
 
 

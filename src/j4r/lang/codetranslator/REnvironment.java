@@ -55,6 +55,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	
 	public static final String ColliderSplitter = "_";
 	
+	public static final String ClassPathSeparator = "::";
+	
 	protected static final String R_NUMERIC_TOKEN = "nu";
 	protected static final String R_INTEGER_TOKEN = "in";
 	protected static final String R_LOGICAL_TOKEN = "lo";
@@ -836,7 +838,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 	
 	/**
-	 * Main entry point for creating a REnvironment hosted by a Java local gateway server.
+	 * Main entry point for creating a REnvironment hosted by a Java local gateway server. <br>
+	 * <br>
+	 * To define the classpath, use the "-ext" plus the different paths separated by the REnvironment.ClassPathSeparator 
+	 * variable (e.g. <code> -ext C:\myExtention\*::C:\myClasses\</code>).
+	 * 
 	 * @param args
 	 * @throws Exception
 	 */
@@ -849,18 +855,17 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
 				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
-//				String classPath = "j4r-" + J4rVersion + ".jar";
 				String classPath = jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1); 
 				System.out.println("ClassPath = " + jarFilename);
+				
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
-					if (new File(extensionPath).exists()) {
-						String classPathSeparator = ":";
-						if (J4RSystem.isRunningOnWindows()) {
-							classPathSeparator = ";";
-						}
-						classPath  = classPath + classPathSeparator + extensionPath;// + File.separator + "*";
+					StringBuilder sb = new StringBuilder();
+					String[] classPaths = extensionPath.split(REnvironment.ClassPathSeparator);
+					for (int i = 0; i < classPaths.length; i++) {
+						sb.append(i == 0 ? classPaths[i] : File.pathSeparatorChar + classPaths[i]);
 					}
+					classPath  = classPath + File.pathSeparatorChar + sb.toString();
 				}
 				
 				String port = J4RSystem.retrieveArgument(JavaGatewayServer.PORT, arguments);

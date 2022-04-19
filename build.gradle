@@ -3,7 +3,6 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 group = 'org'
-version = project.version
 
 def buildForCapsis4R = findProperty('buildForCapsis4R') ?: 'false'
 def capsisPath = findProperty('capsisPath') ?: null
@@ -72,11 +71,36 @@ dependencies {
     }
 }
 
+def getSemVersion = { ->
+
+	def versionStdOut = new ByteArrayOutputStream()
+
+	def cmd = ['gitversion', '/showvariable', 'SemVer']
+	
+	    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+	        def oscmd = ['cmd', '/c'] + cmd
+	        exec {
+	        	commandLine oscmd
+	        	standardOutput = versionStdOut
+        	}
+	    
+	    } else {
+	        def oscmd = ['sh'] + cmd
+	        exec {
+	        	commandLine oscmd
+	    		standardOutput = versionStdOut
+    		}
+    	}
+    
+    return versionStdOut.toString().trim()        	
+}
+
  
 compileJava {
-	project.version=j4r_serverVersion
+	project.version=getSemVersion()
 	println "Building " + rootProject.name + " v" + project.version
 }
+
 
 test {
     // show standard out and standard error of the test JVM(s) on the console

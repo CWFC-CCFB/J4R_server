@@ -30,7 +30,6 @@ import java.util.Vector;
 import org.junit.Assert;
 import org.junit.Test;
 
-import j4r.net.server.JavaGatewayServer;
 import j4r.net.server.ServerConfiguration;
 
 public class TranslationTest {

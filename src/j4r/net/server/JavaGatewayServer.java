@@ -231,6 +231,14 @@ public class JavaGatewayServer extends AbstractServer {
 	@Override
 	protected void createFileInfoForLocalServer() throws IOException {
 		String filename = getConfiguration().wd.trim() + File.separator + "J4RTmpFile";
+		
+		// create the lock file
+		String lockFilename = filename + ".lock";
+		File lockFile = new File(lockFilename);
+		FileWriter lockWriter = new FileWriter(lockFile);
+		lockWriter.write("");
+		lockWriter.close();
+		
 		File file = new File(filename);
 		String realizedListeningPorts = "";
 		for (CallReceiverThread t : callReceiverThreads) {
@@ -245,6 +253,8 @@ public class JavaGatewayServer extends AbstractServer {
 		FileWriter writer = new FileWriter(file);
 		writer.write(outputStr);
 		writer.close();
+		
+		lockFile.delete();	// delete the lock file
 	}
 
 	@Override

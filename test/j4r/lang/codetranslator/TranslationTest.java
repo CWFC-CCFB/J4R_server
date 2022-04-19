@@ -37,8 +37,11 @@ public class TranslationTest {
 	@SuppressWarnings({"rawtypes" })
 	@Test
 	public void testLocalServerMultipleRequests() throws Exception {
-		String filename = System.getProperty("java.io.tmpdir") + File.separator + "J4RTmpFile";
+		String filename = System.getProperty("java.io.tmpdir") + "J4RTmpFile";
 		File j4rTMP = new File(filename);
+		String lockFilename = System.getProperty("java.io.tmpdir") + "J4RTmpFile.lock";
+		File j4rTMPLock = new File(lockFilename);
+		
 		System.out.println(filename);
 		if (j4rTMP.exists()) {
 			j4rTMP.delete();
@@ -46,16 +49,18 @@ public class TranslationTest {
 		FakeJavaGatewayServer server = new FakeJavaGatewayServer(new ServerConfiguration(new int[]{0}, new int[]{0, 0}, 101, null) , null);	
 		server.startApplication();
 
-		while(!j4rTMP.exists()) {Thread.sleep(1);}		
+		while(!j4rTMP.exists()) {}		
+		
+		while(j4rTMPLock.exists()) {}		
 		
 		BufferedReader br = new BufferedReader(new FileReader(j4rTMP));
 		String line = br.readLine();
 		// TODO: In the R client, there is no waiting for a complete line.  The client only waits for 500ms after server instantiation.
-		while(line == null) 
-		{
-			Thread.sleep(1);
-			line = br.readLine();
-		}
+//		while(line == null) 
+//		{
+//			Thread.sleep(1);
+//			line = br.readLine();
+//		}
 		
 		String[] info = line.split(";");
 		br.close();

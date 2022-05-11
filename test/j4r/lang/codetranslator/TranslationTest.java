@@ -55,12 +55,6 @@ public class TranslationTest {
 		
 		BufferedReader br = new BufferedReader(new FileReader(j4rTMP));
 		String line = br.readLine();
-		// TODO: In the R client, there is no waiting for a complete line.  The client only waits for 500ms after server instantiation.
-//		while(line == null) 
-//		{
-//			Thread.sleep(1);
-//			line = br.readLine();
-//		}
 		
 		String[] info = line.split(";");
 		br.close();
@@ -111,6 +105,10 @@ public class TranslationTest {
 			Assert.assertEquals("Testing capacity", vec.capacity(), expCapacity);
 			expCapacity++;
 		}
+		
+		
+		
+		
 
 //		client.close();			
 		System.out.println("TCP Server implementation with multiple requests (3) successfully tested!");

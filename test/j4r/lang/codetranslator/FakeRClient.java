@@ -95,4 +95,17 @@ public class FakeRClient extends BasicClient {
 		Object result = processRequest(request);
 		return result;
 	}
+	
+	protected Object createArrayListWithCollection() throws BasicClientException {
+		String request = REnvironment.ConstructCode + REnvironment.MainSplitter +
+				"java.util.ArrayList";
+		String result = (String) processRequest(request);
+		Object callbackAfterAddingString = addThisToArrayList(result, "characterhelloworld2!");
+		String request2 = REnvironment.ConstructCode + REnvironment.MainSplitter +
+				"java.util.ArrayList" + REnvironment.MainSplitter + REnvironment.R_JAVA_OBJECT_HASHCODE_PREFIX + 
+				result.substring(result.indexOf("@") + 1);
+		Object result2 = processRequest(request2);
+		return result2;
+	}
+
 }

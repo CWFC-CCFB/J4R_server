@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import org.junit.Assert;
@@ -106,12 +107,12 @@ public class TranslationTest {
 			expCapacity++;
 		}
 		
-		
-		
-		
-
+		callback = client.createArrayListWithCollection();
+		hashCode = callback.toString().substring(callback.toString().indexOf("@") + 1);
+		List arrayListWithConstructor = (ArrayList) env.findObjectInEnvironment(REnvironment.R_JAVA_OBJECT_HASHCODE_PREFIX + hashCode).get(0).value;
+		Assert.assertEquals("Testing if the string is the expected one", "helloworld2!", arrayListWithConstructor.get(0).toString()); 
 //		client.close();			
-		System.out.println("TCP Server implementation with multiple requests (3) successfully tested!");
+		System.out.println("TCP Server implementation with multiple requests successfully tested!");
 		server.requestShutdown();
 	}
 

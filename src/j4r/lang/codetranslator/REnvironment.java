@@ -22,11 +22,13 @@ package j4r.lang.codetranslator;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -92,18 +94,18 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 
 	
-	static class MethodWrapper implements Comparable<MethodWrapper> {
+	static class ExecutableWrapper<P extends Executable> implements Comparable<ExecutableWrapper> {
 
 		final double score; 
-		final Method method;
+		final P executable;
 		
-		MethodWrapper(double score, Method method) {
+		ExecutableWrapper(double score, P executable) {
 			this.score = score;
-			this.method = method;
+			this.executable = executable;
 		}
 		
 		@Override
-		public int compareTo(MethodWrapper o) {
+		public int compareTo(ExecutableWrapper o) {
 			if (score < o.score) {
 				return -1;
 			} else  if (score == o.score) {
@@ -112,7 +114,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				return 1;
 			}
 		}
-		
 	}
 	
 	static class JavaObjectList extends ArrayList<ParameterWrapper> {
@@ -564,13 +565,13 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	@SuppressWarnings("rawtypes")
 	private Method findNearestMethod(Class clazz, String methodName, List<Class<?>> parameterTypes) throws NoSuchMethodException {
 		Method[] methods = clazz.getMethods();
-		List<MethodWrapper> possibleMatches = new ArrayList<MethodWrapper>();
+		List<ExecutableWrapper<Method>> possibleMatches = new ArrayList<ExecutableWrapper<Method>>();
 		for (Method method : methods) {
 			if (method.getName().equals(methodName)) {	// possible match
 				Class[] classes = method.getParameterTypes();
 				double score = doParameterTypesMatch(classes, parameterTypes.toArray(new Class[]{}));
 				if (score >= 0) {
-					possibleMatches.add(new MethodWrapper(score, method));
+					possibleMatches.add(new ExecutableWrapper<Method>(score, method));
 				}
 			}
 		}
@@ -579,7 +580,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		} else {
 			Collections.sort(possibleMatches);
 		}
-		return possibleMatches.get(0).method;
+		return possibleMatches.get(0).executable;
 	}
 	
 	private void registerMethodOutput(Object result, JavaObjectList outputList) {
@@ -694,6 +695,25 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private Constructor findNearestConstructor(Class clazz, List<Class<?>> parameterTypes) throws NoSuchMethodException {
+		Constructor[] constructors = clazz.getConstructors();
+		List<ExecutableWrapper<Constructor>> possibleMatches = new ArrayList<ExecutableWrapper<Constructor>>();
+		for (Constructor constructor : constructors) {
+			Class[] classes = constructor.getParameterTypes();
+			double score = doParameterTypesMatch(classes, parameterTypes.toArray(new Class[]{}));
+			if (score >= 0) {
+				possibleMatches.add(new ExecutableWrapper<Constructor>(score, constructor));
+			}
+		}
+		if (possibleMatches.isEmpty()) {
+			throw new NoSuchMethodException("No public constructor was found in the class " + clazz.getSimpleName());
+		} else {
+			Collections.sort(possibleMatches);
+		}
+		return possibleMatches.get(0).executable;
+	}
+
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object createObjectFromRequestStrings(String[] requestStrings) throws Exception {
@@ -762,7 +782,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				Method met = clazz.getMethod("valueOf", String.class);
 				return met.invoke(null, paramValues[0].toString());
 			} else {
-				Constructor<?> constructor = clazz.getConstructor(paramTypes);
+				Constructor<?> constructor;
+				try {
+					constructor = clazz.getConstructor(paramTypes);
+				} catch (NoSuchMethodException e) {		
+					constructor = findNearestConstructor(clazz, Arrays.asList(paramTypes));		// TODO test this code
+				} 			
 				return constructor.newInstance(paramValues);
 			}
 		}

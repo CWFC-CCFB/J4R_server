@@ -29,31 +29,26 @@ import java.security.InvalidParameterException;
 import j4r.net.SocketWrapper;
 import j4r.net.TCPSocketWrapper;
 import j4r.net.server.AbstractServer.ServerReply;
-import j4r.util.J4RTranslator;
-import j4r.util.J4RTranslator.TextableEnum;
 
 public class BasicClient implements Closeable {
 	
 	public static enum ClientRequest {closeConnection}
 
-	public static enum ExceptionType implements TextableEnum {
-		ConnectionFailed("The client failed to connect to the server.", "La connexion au serveur n'a pas pu \u00EAtre \u00E9tablie."),
-		ConnectionRejected("The server is busy and cannot process the requests.", "Le serveur est actuellement occup\u00E9 et ne peut r\u00E9pondre aux requ\u00EAtes."),
-		ConnectionTooLong("The reply from the server has exceeded the allowed time.", "La r\u00E9ponse du serveur a ex\u00E9c\u00E9d\u00E9 le temps d'attente."),
-		UnknownErrorWhileConnected("An exception occurred while processing the request.", "Une exception est survenue dans l'ex\u00E9cution de la requ\u00EAte.");
-		
-		ExceptionType(String englishText, String frenchText) {
-			setText(englishText, frenchText);
-		}
-		
-		@Override
-		public void setText(String englishText, String frenchText) {
-			J4RTranslator.setString(this, englishText, frenchText);
-		}
+	public static enum ExceptionType {
+		ConnectionFailed("The client failed to connect to the server."),
+		ConnectionRejected("The server is busy and cannot process the requests."),
+		ConnectionTooLong("The reply from the server has exceeded the allowed time."),
+		UnknownErrorWhileConnected("An exception occurred while processing the request.");
 
+		final String text;
+		
+		ExceptionType(String englishText) {
+			this.text = englishText;
+		}
+		
 		@Override
 		public String toString() {
-			return J4RTranslator.getString(this);
+			return text;
 		}
 	}
 	

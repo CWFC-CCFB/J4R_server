@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import j4r.util.J4RTranslator;
-import j4r.util.J4RTranslator.TextableEnum;
-
 /**
  * The AbstractGenericEngine class implements all the methods to run an application. Some
  * GenericTask instances are stored in a queue, and processed in order by an internal SwingWorker.
@@ -34,22 +31,19 @@ import j4r.util.J4RTranslator.TextableEnum;
 public abstract class AbstractGenericEngine {
 
 
-	private static enum MessageID implements TextableEnum {
-		ErrorMessage("An error of this type occured while running task ", "Une erreur de ce type est survenu pendant l'ex\u00E9cution de la t\u00E2che "),
-		CancelMessage("The task has been canceled !", "La t\u00E2che a \u00E9t\u00E9 annul\u00E9e !");
+	private static enum MessageID {
+		ErrorMessage("An error of this type occured while running task "),
+		CancelMessage("The task has been canceled!");
+
+		final String text; 
 		
-		MessageID(String englishText, String frenchText) {
-			setText(englishText, frenchText);
+		MessageID(String englishText) {
+			this.text = englishText;
 		}
 
 		@Override
-		public void setText(String englishText, String frenchText) {
-			J4RTranslator.setString(this, englishText, frenchText);
-		}
-		
-		@Override
 		public String toString() {
-			return J4RTranslator.getString(this);
+			return text;
 		}
 	}
 	

@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import j4r.net.server.JavaGatewayServer;
-import j4r.util.J4RTranslator;
-import j4r.util.J4RTranslator.Language;
 
 /**
  * The REpiceaSystem offers some additional features to the System class.
@@ -75,41 +73,6 @@ public class J4RSystem {
 		return directory;
 	}
 	
-	/**
-	 * This method scans the arguments given to the main method in order to 
-	 * set the language. Does not do anything if the arguments do not contain
-	 * "-l" followed by the language code, typically "fr" for French
-	 * @param args the arguments given to the main method
-	 * @param defaultLanguage a default language can be null
-	 */
-	public static void setLanguageFromMain(String[] args, Language defaultLanguage) {
-		Language language = null;
-		List<String> argumentList = Arrays.asList(args);
-		if (argumentList.contains("-l")) {
-			int indexLanguage = argumentList.indexOf("-l") + 1;
-			if (argumentList.size() > indexLanguage) {
-				String languageCode = argumentList.get(indexLanguage);
-				language = J4RTranslator.Language.getLanguage(languageCode);
-			}
-		}
-		if (language == null && defaultLanguage != null) {
-			language = defaultLanguage;
-		}
-		if (language != null) {
-			J4RTranslator.setCurrentLanguage(language);
-		}
-	}
-	
-
-	/**
-	 * This method scans the arguments given to the main method in order to 
-	 * set the language. Does not do anything if the arguments do not contain
-	 * "-l" followed by the language code, typically "fr" for French
-	 * @param args the arguments given to the main method
-	 */
-	public static void setLanguageFromMain(String[] args) {
-		setLanguageFromMain(args, null);
-	}
 
 //	/**
 //	 * This method returns the three digits of the JVM version
@@ -177,16 +140,12 @@ public class J4RSystem {
 	 */
 	public static List<String> setClassicalOptions(String[] args) {
 		if (args.length == 0) {
-//			System.out.println("No parameters received.");
 			return new ArrayList<String>();
 		} else {
 			String inputString = "";
 			for (String str : args) {
 				inputString = inputString + str + "; ";
 			}
-//			System.out.println("Parameters received:" + inputString);
-			J4RSystem.setLanguageFromMain(args, Language.English);
-//			System.out.println("Language set to: " + J4RTranslator.getCurrentLanguage().name());
 			return Arrays.asList(args);
 		}
 	}

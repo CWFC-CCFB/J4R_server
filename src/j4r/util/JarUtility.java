@@ -28,7 +28,7 @@ public class JarUtility {
 	private static final String JAR_FILE_PREFIX = "jar:file:";
 
 	/**
-	 * Return a boolean that indicates whether the class is embedded in a Jar file or not.
+	 * Return a boolean that indicates blabla whether the class is embedded in a Jar file or not.
 	 * @param clazz the class
 	 * @return a boolean true means the class is in a jar file or false otherwise
 	 */

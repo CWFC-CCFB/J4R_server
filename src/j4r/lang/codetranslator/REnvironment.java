@@ -20,6 +20,7 @@
 package j4r.lang.codetranslator;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -27,6 +28,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.InvalidParameterException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,7 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
 
+import j4r.app.AbstractGenericEngine;
 import j4r.lang.J4RSystem;
 import j4r.lang.reflect.ReflectUtility;
 import j4r.multiprocess.JavaProcess;
@@ -242,6 +249,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	 * @throws Exception
 	 */
 	public Object processCode(String request) throws Exception {
+		AbstractGenericEngine.J4RLogger.log(Level.FINE, "Processing request: " + request);
 		String[] requestStrings = request.split(MainSplitter);
 		if (requestStrings[0].startsWith(ConstructCode)) {	// can be either create, createarray or createnull here
 			return createObjectFromRequestStrings(requestStrings); 
@@ -862,6 +870,32 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return ports;
 	}
 	
+	private static void createLogFile(boolean isFirstCall, String wd) {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd");  
+		LocalDateTime now = LocalDateTime.now();  
+		File f;
+		if (isFirstCall) {
+			f = new File(System.getProperty("java.io.tmpdir") + File.separator + "J4RServerStarter" + dtf.format(now) + ".log");
+		} else {
+			if (wd != null && new File(wd).isDirectory()) {
+				f = new File(wd + File.separator + "J4RServer" + dtf.format(now) + ".log");
+			} else {
+				f = new File(System.getProperty("java.io.tmpdir") + File.separator + "J4RServer" + dtf.format(now) + ".log");
+			}
+		}
+		if (f.exists())
+			f.delete();
+		try {
+			FileHandler fh = new FileHandler(f.getAbsolutePath());  
+		    AbstractGenericEngine.J4RLogger.addHandler(fh);
+	        SimpleFormatter formatter = new SimpleFormatter();  
+	        fh.setFormatter(formatter);  
+		} catch (Exception e) {
+			AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to create log file!");
+		}
+	}
+	
+	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server. <br>
 	 * <br>
@@ -877,11 +911,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			List<String> arguments = J4RSystem.setClassicalOptions(args);
 			String firstCall = J4RSystem.retrieveArgument(FIRSTCALL, arguments);
 			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
+				createLogFile(true, null);
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
 				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
 				String classPath = jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1); 
-				System.out.println("ClassPath = " + jarFilename);
+				AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + jarFilename);
 				
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
@@ -982,6 +1017,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				}
 				listeningPorts = new int[nbPorts];
 			}
+			String wd = J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments);
+			createLogFile(false, wd);
 			String backdoorportStr = J4RSystem.retrieveArgument(JavaGatewayServer.BACKDOORPORT, arguments);
 			int[] backdoorports;
 			if (backdoorportStr != null) {
@@ -1003,7 +1040,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 			if (isPublic) {
  				conf = new ServerConfiguration(1, 10, listeningPorts, backdoorports, key);
 			} else {
- 				conf = new ServerConfiguration(listeningPorts, backdoorports, key, J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments));
+ 				conf = new ServerConfiguration(listeningPorts, backdoorports, key, wd);
 			}
 			server = new JavaGatewayServer(conf, null);	// null: no need for a main instance 
 			server.startApplication();

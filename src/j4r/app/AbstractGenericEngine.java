@@ -115,7 +115,7 @@ public abstract class AbstractGenericEngine {
 				} while (!currentTask.equals(engine.finalTask));
 			} catch (InterruptedException e) {
 				failureReason = e;
-				System.out.println("The Engine has been interrupted!");
+				J4RLogger.log(Level.SEVERE, "The Engine has been interrupted!");
 				engine.finalTask.run();
 			}
 		}
@@ -177,7 +177,7 @@ public abstract class AbstractGenericEngine {
 			message = MessageID.ErrorMessage.toString() + taskName + " : " + errorType;
 		}
 		
-		System.out.println(message);
+		J4RLogger.log(Level.SEVERE, message);
 		queue.clear();
 	}
 	
@@ -199,7 +199,7 @@ public abstract class AbstractGenericEngine {
 
 	
 	protected void shutdown(int shutdownCode) {
-		System.out.println("Shutting down application...");
+		J4RLogger.log(Level.INFO, "Shutting down application...");
 		System.exit(shutdownCode);
 	}
 

@@ -34,6 +34,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+
+import j4r.app.AbstractGenericEngine;
 
 /**
  * The AbstractIndependentProcess is the abstract class for process wrapper in Java. It includes two 
@@ -86,7 +89,7 @@ abstract class AbstractIndependentProcess implements Runnable, Future<Integer> {
 					String message = "Communication channel shutted down";
 					abstractIndependentProcess.firePropertyChange("MessageReceived", null, message);
 					if (abstractIndependentProcess.redirectOutputStream) {
-						System.out.println("PROCESS " + abstractIndependentProcess.getName() + ": " + message);
+						AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "PROCESS " + abstractIndependentProcess.getName() + ": " + message);
 					}
 				}
 			}
@@ -219,7 +222,7 @@ abstract class AbstractIndependentProcess implements Runnable, Future<Integer> {
 				while (lineReceived != null) {
 					firePropertyChange("MessageReceived", previousMessage, lineReceived);
 					if (redirectOutputStream) {
-						System.out.println("PROCESS " + getName() + ": " + lineReceived);
+						AbstractGenericEngine.J4RLogger.log(Level.FINER, "PROCESS " + getName() + ": " + lineReceived);
 					}
 					previousMessage = lineReceived;
 					lineReceived = reader.readLine();

@@ -23,7 +23,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.List;
+import java.util.logging.Level;
 
+import j4r.app.AbstractGenericEngine;
 import j4r.app.AbstractGenericTask;
 
 public class JavaProcessWrapper extends AbstractGenericTask implements PropertyChangeListener {
@@ -60,7 +62,7 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 				if (!atLeastOneMessageReceived) {
 					atLeastOneMessageReceived = true;
 				}
-				System.out.println((String) arg0.getNewValue());
+				AbstractGenericEngine.J4RLogger.log(Level.FINER, "Message received is: " +(String) arg0.getNewValue());
 			}
 		}
 	}
@@ -68,10 +70,6 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 
 	@Override
 	public void doThisJob() throws Exception {
-//		System.out.println("Launching " + getName() + "...");
-//		for (JVM_OPTION option : internalProcess.getJVMSettings().keySet()) {
-//			System.out.println(option.name() + " = " + internalProcess.getJVMSettings().get(option).toString());
-//		}
 		internalProcess.execute();
 		int output = -1;
 		try {

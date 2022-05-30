@@ -908,6 +908,19 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
+		if (args == null || args.length == 0) {
+			System.out.println("Usage: [-firstcall <value>] [-ports <value>] [-backdoorport <value>]");
+			System.out.println("       [-key <value>] [-public <value>] [-loglevel <value>]");
+			System.out.println("");
+			System.out.println("   firstcall     either true or false");
+			System.out.println("   ports         one positive integer or a series of integer separated by :");
+			System.out.println("                 e.g. 18000:18001");
+			System.out.println("   backdoorport  two integers seperated by :   e.g. 50000:50001");
+			System.out.println("   key           an integer");
+			System.out.println("   public        either on or off");
+			System.out.println("   loglevel      INFO, FINE, FINER, FINEST");
+			return;
+		}
 		JavaGatewayServer server = null;
 		try {
 			List<String> arguments = J4RSystem.setClassicalOptions(args);

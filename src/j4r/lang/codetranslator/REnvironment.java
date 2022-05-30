@@ -58,6 +58,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	
 	private static final String FIRSTCALL = "-firstcall";
 	
+	private static final String LOGLEVEL = "-loglevel";
+	
 	public static final String MainSplitter = "/;";
 	
 	public static final String SubSplitter = "/,";
@@ -910,6 +912,16 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		try {
 			List<String> arguments = J4RSystem.setClassicalOptions(args);
 			String firstCall = J4RSystem.retrieveArgument(FIRSTCALL, arguments);
+			String logLevel = J4RSystem.retrieveArgument(LOGLEVEL, arguments);
+			if (logLevel != null) {
+				Level l = null;
+				try {
+					l = Level.parse(logLevel.toUpperCase());
+					AbstractGenericEngine.J4RLogger.setLevel(l);
+				} catch(Exception e) {
+					AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to set this log level: " + logLevel);
+				}
+			}
 			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
 				createLogFile(true, null);
 				List<String> newCommands = new ArrayList<String>();

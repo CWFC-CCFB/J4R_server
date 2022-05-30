@@ -19,15 +19,13 @@
  */
 package j4r.net.server;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 
 import j4r.net.SocketWrapper;
 import j4r.net.server.AbstractServer.ServerReply;
 
-public abstract class ClientThread implements Runnable, ActionListener {
+public abstract class ClientThread implements Runnable {
 	
 	protected final AbstractServer.CallReceiverThread receiver;
 	protected SocketWrapper socketWrapper;
@@ -37,7 +35,7 @@ public abstract class ClientThread implements Runnable, ActionListener {
 	private InetAddress clientAddress;
 	
 	private Thread worker;
-	private final Object lock = new Object();
+//	private final Object lock = new Object();
 	protected boolean shutdownCall;
 
 	/**
@@ -60,48 +58,29 @@ public abstract class ClientThread implements Runnable, ActionListener {
 	public void run() {
 		while (!shutdownCall) {
 			try {
+				socketWrapper = receiver.clientQueue.take();
+				clientAddress = socketWrapper.getInetAddress();
+
+				processRequest();
+
+				socketWrapper.writeObject(ServerReply.ClosingConnection);
+				closeSocket();
+			} catch (Exception e) {
 				try {
-					socketWrapper = receiver.clientQueue.take();
-					clientAddress = socketWrapper.getInetAddress();
-
-					processRequest();
-
-					socketWrapper.writeObject(ServerReply.ClosingConnection);
+					e.printStackTrace();
+					if (!socketWrapper.isClosed()) {
+						socketWrapper.writeObject(e);
+					}
 					closeSocket();
-				} catch (Exception e) {
-					try {
-						e.printStackTrace();
-						if (!socketWrapper.isClosed()) {
-							socketWrapper.writeObject(e);
-						}
-						closeSocket();
-					} catch (IOException e1) {
-						socketWrapper = null;
-					}
-					synchronized (lock) {
-						lock.wait();
-					}
+				} catch (IOException e1) {
+					socketWrapper = null;
 				}
-			} catch (InterruptedException e) {}
+			}
 		}
 	}
 
 	protected abstract Object processRequest() throws Exception;
 
-
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		if (arg0.getActionCommand().equals("Restart")) {
-				restartAction();
-		} 
-	}
-
-	protected void restartAction() {
-		synchronized(lock) {
-			lock.notify();
-		}
-	}
-	
 	
 	protected void start() {
 		worker = new Thread(this);

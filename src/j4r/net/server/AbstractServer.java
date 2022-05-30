@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
 
 import j4r.app.AbstractGenericEngine;
 import j4r.net.SocketWrapper;
@@ -176,7 +177,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 						clientQueue.add(clientSocket);
 					}
 				}
-				System.out.println("Call receiver thread shut down");
+				AbstractGenericEngine.J4RLogger.log(Level.INFO, "Call receiver thread shut down");
 			} catch (Exception e) {
 				if (!shutdownCall) {
 					e.printStackTrace();
@@ -332,9 +333,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			t.start();
 		}
 		gcReceiverThread.start();
-		System.out.println("Server started");
-//		callReceiver.join();
-//		System.out.println("Server shutting down");
+		AbstractGenericEngine.J4RLogger.log(Level.INFO, "Server started");
 	}
 
 	/**
@@ -360,16 +359,16 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	protected List<ClientThread> getClientThreads() {return clientThreads;}
 
 
-	protected void closeAndRestartTheseThreads(Collection<ClientThread> connectionsToBeClosed) {
-		for (ClientThread thread : connectionsToBeClosed) {
-			try {
-				thread.getSocket().close();
-				thread.restartAction();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	protected void closeAndRestartTheseThreads(Collection<ClientThread> connectionsToBeClosed) {
+//		for (ClientThread thread : connectionsToBeClosed) {
+//			try {
+//				thread.getSocket().close();
+//				thread.restartAction();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 
 	@Override
@@ -446,6 +445,5 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * @throws IOException
 	 */
 	protected abstract void createFileInfoForLocalServer() throws IOException;
-	
 
 }

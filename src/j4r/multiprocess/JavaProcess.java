@@ -25,7 +25,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
+import j4r.app.AbstractGenericEngine;
 import j4r.lang.J4RSystem;
 
 /**
@@ -149,7 +151,7 @@ public final class JavaProcess extends AbstractIndependentProcess {
 			finalCommands.add("-jar");
 		}
 		finalCommands.addAll(commands);
-		System.out.println(finalCommands);
+		AbstractGenericEngine.J4RLogger.log(Level.INFO, "Starting Java process with command = " + finalCommands);
 		ProcessBuilder pb = new ProcessBuilder(finalCommands);
 		pb.redirectErrorStream(true);
 		if (workingDirectory != null) {

@@ -31,15 +31,19 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+
+import j4r.app.AbstractGenericEngine;
 
 /**
  * The AbstractIndependentProcess is the abstract class for process wrapper in Java. It includes two 
  * daemon threads: one that communicates with the process and the other that runs the process itself.
  * @author Mathieu Fortin
  */
-abstract class AbstractIndependentProcess implements Runnable {
+abstract class AbstractIndependentProcess implements Runnable, Future<Integer> {
 
 	public enum StateValue {DONE, PENDING, STARTED}
 
@@ -85,7 +89,7 @@ abstract class AbstractIndependentProcess implements Runnable {
 					String message = "Communication channel shutted down";
 					abstractIndependentProcess.firePropertyChange("MessageReceived", null, message);
 					if (abstractIndependentProcess.redirectOutputStream) {
-						System.out.println("PROCESS " + abstractIndependentProcess.getName() + ": " + message);
+						AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "PROCESS " + abstractIndependentProcess.getName() + ": " + message);
 					}
 				}
 			}
@@ -218,7 +222,7 @@ abstract class AbstractIndependentProcess implements Runnable {
 				while (lineReceived != null) {
 					firePropertyChange("MessageReceived", previousMessage, lineReceived);
 					if (redirectOutputStream) {
-						System.out.println("PROCESS " + getName() + ": " + lineReceived);
+						AbstractGenericEngine.J4RLogger.log(Level.FINER, "PROCESS " + getName() + ": " + lineReceived);
 					}
 					previousMessage = lineReceived;
 					lineReceived = reader.readLine();

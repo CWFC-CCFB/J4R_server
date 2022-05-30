@@ -360,16 +360,16 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	protected List<ClientThread> getClientThreads() {return clientThreads;}
 
 
-	protected void closeAndRestartTheseThreads(Collection<ClientThread> connectionsToBeClosed) {
-		for (ClientThread thread : connectionsToBeClosed) {
-			try {
-				thread.getSocket().close();
-				thread.restartAction();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	protected void closeAndRestartTheseThreads(Collection<ClientThread> connectionsToBeClosed) {
+//		for (ClientThread thread : connectionsToBeClosed) {
+//			try {
+//				thread.getSocket().close();
+//				thread.restartAction();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 
 	@Override
@@ -446,6 +446,5 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * @throws IOException
 	 */
 	protected abstract void createFileInfoForLocalServer() throws IOException;
-	
 
 }

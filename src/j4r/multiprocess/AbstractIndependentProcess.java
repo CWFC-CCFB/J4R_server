@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,7 +40,7 @@ import java.util.concurrent.TimeoutException;
  * daemon threads: one that communicates with the process and the other that runs the process itself.
  * @author Mathieu Fortin
  */
-abstract class AbstractIndependentProcess implements Runnable {
+abstract class AbstractIndependentProcess implements Runnable, Future<Integer> {
 
 	public enum StateValue {DONE, PENDING, STARTED}
 

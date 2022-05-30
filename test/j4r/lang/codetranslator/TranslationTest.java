@@ -111,9 +111,10 @@ public class TranslationTest {
 		hashCode = callback.toString().substring(callback.toString().indexOf("@") + 1);
 		List arrayListWithConstructor = (ArrayList) env.findObjectInEnvironment(REnvironment.R_JAVA_OBJECT_HASHCODE_PREFIX + hashCode).get(0).value;
 		Assert.assertEquals("Testing if the string is the expected one", "helloworld2!", arrayListWithConstructor.get(0).toString()); 
-//		client.close();			
 		System.out.println("TCP Server implementation with multiple requests successfully tested!");
-		server.requestShutdown();
+		client.close();
+//		int u = 0;
+//		server.requestShutdown();
 	}
 
 }

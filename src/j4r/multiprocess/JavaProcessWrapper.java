@@ -45,9 +45,11 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 	public JavaProcess getInternalProcess() {return internalProcess;}
 	
 	@Override
-	public void cancel() {
-		internalProcess.cancel(true);
-		super.cancel();
+	public boolean cancel(boolean mayInterruptIfRunning) {
+		boolean cancellable = super.cancel(mayInterruptIfRunning);
+		if (cancellable)
+			internalProcess.cancel(mayInterruptIfRunning);
+		return cancellable;
 	}
 	
 	@Override
@@ -75,7 +77,7 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 		try {
 			output = internalProcess.get();
 		} catch (Exception e) {
-			if (hasBeenCancelled()) {
+			if (isCancelled()) {
 				output = 0;
 			} else {
 				throw e;

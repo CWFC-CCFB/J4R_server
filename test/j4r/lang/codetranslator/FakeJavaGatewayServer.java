@@ -36,4 +36,14 @@ class FakeJavaGatewayServer extends JavaGatewayServer {
 		return translators;
 	}
 	
+	/*
+	 * The System.exit call is removed to avoid issues with the Gradle worker
+	 */
+	@Override
+	protected void shutdown(int shutdownCode) {
+		System.out.println("Shutting down application...");
+//		System.exit(shutdownCode);
+	}
+
+	
 }

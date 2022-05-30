@@ -88,7 +88,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		
 		@Override
 		public void run() {
-			rGatewayProcessWrapper.cancel();
+			rGatewayProcessWrapper.cancel(true);
 		}
 		
 	}

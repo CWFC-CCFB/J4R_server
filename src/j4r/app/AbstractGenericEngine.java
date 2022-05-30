@@ -22,6 +22,8 @@ package j4r.app;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The AbstractGenericEngine class implements all the methods to run an application. Some
@@ -101,13 +103,11 @@ public abstract class AbstractGenericEngine {
 				do {
 					currentTask = queue.take();			
 
-					if (currentTask.isVerbose()) {
-						System.out.println("Running task : " + currentTask.getName());
-					}
+					J4RLogger.log(Level.FINE, "Running task : " + currentTask.getName());
 
 					currentTask.run();
 
-					if (!currentTask.isCorrectlyTerminated() || currentTask.hasBeenCancelled()) {
+					if (!currentTask.isCorrectlyTerminated() || currentTask.isCancelled()) {
 						engine.decideWhatToDoInCaseOfFailure(currentTask);
 					} else {
 						engine.tasksDone.add(currentTask.getName());
@@ -122,7 +122,7 @@ public abstract class AbstractGenericEngine {
 		
 		protected void requestCancel() {
 			if (currentTask != null) {
-				currentTask.cancel();
+				currentTask.cancel(true);
 			}
 		}
 		
@@ -134,11 +134,12 @@ public abstract class AbstractGenericEngine {
 			return failureReason;
 		}
 	}
+
+	public static Logger J4RLogger = Logger.getLogger("J4RLogger");
 	
 	protected LinkedBlockingQueue<AbstractGenericTask> queue;
 	protected List<String> tasksDone;
 	private InternalWorker worker;
-	
 	private boolean goAhead = true;
 	private final Object lock = new Object();
 	
@@ -163,7 +164,7 @@ public abstract class AbstractGenericEngine {
 	 */
 	protected void decideWhatToDoInCaseOfFailure(AbstractGenericTask task) {
 		String message = null;
-		if (task.hasBeenCancelled()) {
+		if (task.isCancelled()) {
 			message = MessageID.CancelMessage.toString();
 		} else {
 			String taskName = task.getName();

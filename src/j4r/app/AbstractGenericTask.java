@@ -20,17 +20,20 @@
 package j4r.app;
 
 import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import javax.swing.SwingWorker;
 
 /**
  * This class is the basic class for all the GenericTask classes. It extends the SwingWorker class. The
- * result of the task as whether or not it was correclty terminated is set during the done() method.
+ * result of the task as whether or not it was correctly terminated is set during the done() method.
  * NOTE: The super methods get(), and cancel(boolean) are not recommended. The user should use the methods
  * isCorrectlyTerminated() and cancel() instead.
  * @author Mathieu Fortin - November 2011
  */
-public abstract class AbstractGenericTask extends SwingWorker<Boolean, Object> implements Serializable {
+public abstract class AbstractGenericTask implements Serializable, Runnable, Future<Boolean> {
 
 	private static final long serialVersionUID = 20111219L;
 	
@@ -38,6 +41,7 @@ public abstract class AbstractGenericTask extends SwingWorker<Boolean, Object> i
 	private Exception failureReason;
 	private String name;
 
+	private boolean isStarted = false;
 	private boolean isOver = false; 
 	private final Object lock = new Object();
 	
@@ -51,22 +55,15 @@ public abstract class AbstractGenericTask extends SwingWorker<Boolean, Object> i
 	 */
 	protected AbstractGenericTask() {}
 
-	public boolean isCorrectlyTerminated() {
-		while (!isOver) {
-			synchronized(lock) {
-				try {
-					lock.wait();
-				} catch (InterruptedException e) {}
-			}
-		}
-		return correctlyTerminated;
+	public final boolean isCorrectlyTerminated() {
+		return get();
 	}
 	
 	/**
 	 * This methods sets the correctlyTerminated member.
 	 * @param correctlyTerminated a boolean
 	 */
-	protected void setCorrectlyTerminated(boolean correctlyTerminated) {this.correctlyTerminated = correctlyTerminated;}
+	protected final void setCorrectlyTerminated(boolean correctlyTerminated) {this.correctlyTerminated = correctlyTerminated;}
 
 	public Exception getFailureReason() {return failureReason;}
 	
@@ -93,52 +90,79 @@ public abstract class AbstractGenericTask extends SwingWorker<Boolean, Object> i
 		}
 	}
 	
-	public void cancel() {
-		if (!isCancelled) {
-			isCancelled = true;
-		}
-	}
 	
-	public final boolean hasBeenCancelled() {return isCancelled;}
-	
-	
-	/**
-	 * Compared to the super class, the doInBackground() no longer throws exceptions.
-	 * The exceptions are rather catched and registred as failure reasons.
-	 * @return a Boolean true if the task ended correctly or false otherwise
-	 */
 	@Override
-	protected final Boolean doInBackground() {
+	public final void run() {
 		try {
-			doThisJob();
-			return true;
+			if (!isCancelled) {
+				isStarted = true;
+				doThisJob();
+			}
+			setCorrectlyTerminated(true);
 		} catch (Exception e) {
 			setFailureReason(e);
-			return false;
-		}
-	}
-	
-	/**
-	 * This method is the inner part of the doInBackground method. 
-	 * It should be defined in derived classes.
-	 * @throws Exception 
-	 */
-	protected abstract void doThisJob() throws Exception;
-
-	@Override
-	protected final void done() {
-		try {
-			setCorrectlyTerminated(get());
-		} catch (Exception e) {
 			setCorrectlyTerminated(false);
-			setFailureReason(e);
-		} 
+		}
 		synchronized(lock) {
 			isOver = true;
 			lock.notifyAll();
 		}
 	}
 	
-	public boolean isVerbose() {return false;}
+	/**
+	 * This method is the inner part of the workerdoInBackground method. 
+	 * It should be defined in derived classes.
+	 * @throws Exception 
+	 */
+	protected abstract void doThisJob() throws Exception;
+
+
+	@Override
+	public boolean cancel(boolean mayInterruptIfRunning) {
+		if (isOver) {
+			return false;
+		} else if (!isStarted) {
+			isCancelled = true;
+			return true;
+		} else if (isStarted && mayInterruptIfRunning) {
+			isCancelled = true;
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isCancelled() {
+		return isCancelled;
+	}
+
+	
+	@Override
+	public final boolean isDone() {
+		return isOver || isCancelled;
+	}
+		
+	@Override
+	public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+		long timeoutInMillisec = TimeUnit.MILLISECONDS.convert(timeout, unit);
+		synchronized(lock) {
+			while (!isOver) {
+				lock.wait(timeoutInMillisec);
+			}
+		}
+		return correctlyTerminated;
+	}
+
+	@Override
+	public Boolean get() {
+		try {
+			return get(0, TimeUnit.MILLISECONDS);
+		} catch (Exception e) {
+			setFailureReason(e);
+			setCorrectlyTerminated(false);
+			return correctlyTerminated;
+		}
+	}
+	
 
 }

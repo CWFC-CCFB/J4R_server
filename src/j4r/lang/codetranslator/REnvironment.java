@@ -643,14 +643,24 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
-	private double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
+	protected static double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
 		if (ref == null && obs == null) {
 			return 0d;
 		} else if (ref != null && obs != null) {
 			if (ref.length == obs.length) {
 				double sumScores = 0d;
 				for (int i = 0; i < ref.length; i++) {
-					double score = isAssignableOfThisClass(ref[i], obs[i]);
+					Class<?> refClass = ref[i];
+					Class<?> obsClass = obs[i];
+					if (refClass.isArray()) {
+						if (!obsClass.isArray()) {
+							return -1d;
+						} else {
+							refClass = refClass.getComponentType();
+							obsClass = obsClass.getComponentType();
+						}
+					}
+					double score = isAssignableOfThisClass(refClass, obsClass);
 					if (score == -1d) {
 						return -1d;
 					} else {
@@ -663,7 +673,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return -1d;
 	}
 
-	private boolean implementThisClassAsAnInterface(Class<?> refcl1, Class<?> cl) {
+	protected static boolean implementThisClassAsAnInterface(Class<?> refcl1, Class<?> cl) {
 		if (ReflectUtility.JavaWrapperToPrimitiveMap.containsKey(refcl1)) {
 			if (cl.equals(ReflectUtility.JavaWrapperToPrimitiveMap.get(refcl1))) {
 				return true;
@@ -683,7 +693,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return false;
 	}
 	
-	private double isAssignableOfThisClass(Class<?> refcl1, Class<?> cl2) {
+	protected static double isAssignableOfThisClass(Class<?> refcl1, Class<?> cl2) {
 		int degree = 0;
 		Class<?> cl = cl2;
 		boolean isInterfaceMatching = implementThisClassAsAnInterface(refcl1, cl);

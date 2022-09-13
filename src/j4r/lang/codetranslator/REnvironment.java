@@ -950,15 +950,20 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
 				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
-				String classPath = jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1); 
-				AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + jarFilename);
+				String classPath = jarFilename != null ? 
+							"\"" + jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) + "\"" : // adding quotes to deal with spaces in path MF2022-09-13
+							"\"" + ObjectUtility.getTrueRootPath(REnvironment.class) + "\"";  // adding quotes to deal with spaces in path MF2022-09-13
+				AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + classPath);
 				
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
 				if (extensionPath != null) {
 					StringBuilder sb = new StringBuilder();
 					String[] classPaths = extensionPath.split(REnvironment.ClassPathSeparator);
 					for (int i = 0; i < classPaths.length; i++) {
-						sb.append(i == 0 ? classPaths[i] : File.pathSeparatorChar + classPaths[i]);
+						String thisClassPath = "\"" + classPaths[i] + "\""; // adding quotes to deal with spaces in path MF2022-09-13
+						sb.append(i == 0 ? 
+								thisClassPath : 
+									File.pathSeparatorChar + thisClassPath);
 					}
 					classPath  = classPath + File.pathSeparatorChar + sb.toString();
 				}

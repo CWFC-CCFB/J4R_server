@@ -75,7 +75,19 @@ public class JavaGatewayServer extends AbstractServer {
 
 		
 		public String toString() {
-			return this.getClass().getName() + "_" + nestedException.toString();
+			StringBuilder stackTraceSB = new StringBuilder();
+			StackTraceElement[] st = nestedException.getStackTrace();
+			int length = st.length > 10 ? 10 : st.length;
+			for (int i = 0; i < length; i++) {
+				if (i == 0) {
+					stackTraceSB.append(st[i].toString());
+				} else {
+					stackTraceSB.append(System.lineSeparator() + st[i].toString());
+				}
+			}
+			String stackTraceStr = stackTraceSB.toString();
+			
+			return this.getClass().getName() + "_" + nestedException.toString() + System.lineSeparator() + stackTraceStr;
 		}
 	}
 	
@@ -128,6 +140,7 @@ public class JavaGatewayServer extends AbstractServer {
 								if (e instanceof IOException) {	// seems that the connection was lost
 									closeSocket();
 								} else if (!socketWrapper.isClosed()) {
+//									AbstractGenericEngine.J4RLogger.log(Level.SEVERE, e.getMessage(), e);
 									if (e instanceof InvocationTargetException) {
 										socketWrapper.writeObject(new JavaGatewayException(((InvocationTargetException) e).getTargetException()));
 									} else {

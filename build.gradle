@@ -184,7 +184,6 @@ task install(type: Copy) {
 	description = 'Copies the output jar to installation folder.'
 	group = 'build'
 	dependsOn jar,deleteInstallFolder,integrationTest
-	from configurations.default
 	from jar
 	into "${installDir}"
 }
@@ -193,7 +192,6 @@ task installIntoCapsisDirectory(type: Copy) {
     description = 'Copies the output jar to CAPSIS installation folder.'
     group = 'build'
     dependsOn jar,integrationTest
-    from configurations.default
     from jar
     doFirst {
         if(capsisPath == null) throw new GradleException("capsisPath property is not set.")

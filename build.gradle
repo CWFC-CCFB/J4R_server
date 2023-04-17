@@ -57,31 +57,6 @@ sourceSets {
     }               
 }
 
-/*
-def getSemVersion = { ->
-
-	def versionStdOut = new ByteArrayOutputStream()
-
-	def cmd = ['gitversion', '/showvariable', 'SemVer']
-	
-	    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-	        def oscmd = ['cmd', '/c'] + cmd
-	        exec {
-	        	commandLine oscmd
-	        	standardOutput = versionStdOut
-        	}
-	    
-	    } else {
-	        exec {
-	        	commandLine cmd
-	    		standardOutput = versionStdOut
-    		}
-    	}
-    
-    return versionStdOut.toString().trim()        	
-}
-*/
-
 // make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
 // make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
 dependencies {

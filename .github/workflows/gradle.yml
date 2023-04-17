@@ -22,7 +22,10 @@ jobs:
       with:
         distribution: temurin
         java-version: 11
-    
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0
+      with:
+        versionSpec: '5.x'
     - name: Setup and execute Gradle 'build' task
       uses: gradle/gradle-build-action@v2
       with:

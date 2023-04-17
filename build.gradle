@@ -5,6 +5,10 @@
 	See https://gitversion.net/docs/usage/cli/installation
 */
 
+plugins {
+    id 'com.palantir.git-version' version '3.0.0'
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -22,14 +26,6 @@ repositories {
     mavenLocal()
 }
 
-
-/*
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-*/
 
 println "Using java version " + JavaVersion.current()
 
@@ -61,6 +57,7 @@ sourceSets {
     }               
 }
 
+/*
 def getSemVersion = { ->
 
 	def versionStdOut = new ByteArrayOutputStream()
@@ -83,18 +80,17 @@ def getSemVersion = { ->
     
     return versionStdOut.toString().trim()        	
 }
+*/
 
 // make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
 // make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
 dependencies {
-//	implementation group: 'org', name: 'repicea', version: '1+'    
     testImplementation "junit:junit:4.12"    
 }
 
- 
 compileJava {
-	project.version=getSemVersion() 
-	println "Building " + rootProject.name + " v" + project.version
+	project.version= gitVersion() 
+	println "Building " + rootProject.name + " " + project.version
 }
 
 
@@ -104,7 +100,6 @@ test {
 
     // set heap size for the test JVM(s)
     maxHeapSize = "2048m"
-    
 //    exclude '**/ProductionEnvironmentTest.class'
 }
 

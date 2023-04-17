@@ -1,9 +1,7 @@
 /*
-	Requires GitVersion. 
-	Under Windows, it can be installed using Chocolatey.
-	Under Linux, it can be installed using Homebrew
-	See https://gitversion.net/docs/usage/cli/installation
-*/
+ *  Build file for gradle
+ */
+
 
 plugins {
     id 'com.palantir.git-version' version '3.0.0'

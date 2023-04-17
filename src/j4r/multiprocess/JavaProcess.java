@@ -21,6 +21,7 @@ package j4r.multiprocess;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -154,6 +155,7 @@ public final class JavaProcess extends AbstractIndependentProcess {
 		AbstractGenericEngine.J4RLogger.log(Level.INFO, "Starting Java process with command = " + finalCommands);
 		ProcessBuilder pb = new ProcessBuilder(finalCommands);
 		pb.redirectErrorStream(true);
+		pb.redirectOutput(Redirect.INHERIT);
 		if (workingDirectory != null) {
 			pb.directory(workingDirectory);
 		}

@@ -1,10 +1,15 @@
+/*
+	Requires GitVersion. 
+	Under Windows, it can be installed using Chocolatey.
+	Under Linux, it can be installed using Homebrew
+	See https://gitversion.net/docs/usage/cli/installation
+*/
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 group = 'org'
-
-import org.tmatesoft.svn.core.wc.*
 
 java {
   toolchain {
@@ -56,13 +61,6 @@ sourceSets {
     }               
 }
 
-// make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
-// make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
-dependencies {
-//	implementation group: 'org', name: 'repicea', version: '1+'    
-    testImplementation "junit:junit:4.12"    
-}
-
 def getSemVersion = { ->
 
 	def versionStdOut = new ByteArrayOutputStream()
@@ -77,9 +75,8 @@ def getSemVersion = { ->
         	}
 	    
 	    } else {
-	        def oscmd = ['sh'] + cmd
 	        exec {
-	        	commandLine oscmd
+	        	commandLine cmd
 	    		standardOutput = versionStdOut
     		}
     	}
@@ -87,9 +84,16 @@ def getSemVersion = { ->
     return versionStdOut.toString().trim()        	
 }
 
+// make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
+// make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
+dependencies {
+//	implementation group: 'org', name: 'repicea', version: '1+'    
+    testImplementation "junit:junit:4.12"    
+}
+
  
 compileJava {
-	project.version=getSemVersion()
+	project.version=getSemVersion() 
 	println "Building " + rootProject.name + " v" + project.version
 }
 

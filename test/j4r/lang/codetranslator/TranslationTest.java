@@ -38,9 +38,9 @@ public class TranslationTest {
 	@SuppressWarnings({"rawtypes" })
 	@Test
 	public void testLocalServerMultipleRequests() throws Exception {
-		String filename = System.getProperty("java.io.tmpdir") + "J4RTmpFile";
+		String filename = System.getProperty("java.io.tmpdir") + File.separator +  "J4RTmpFile";
 		File j4rTMP = new File(filename);
-		String lockFilename = System.getProperty("java.io.tmpdir") + "J4RTmpFile.lock";
+		String lockFilename = System.getProperty("java.io.tmpdir") + File.separator + "J4RTmpFile.lock";
 		File j4rTMPLock = new File(lockFilename);
 		
 		System.out.println(filename);

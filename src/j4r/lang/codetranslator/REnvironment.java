@@ -951,8 +951,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				newCommands.add(REnvironment.class.getName());
 				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
 				String classPath = jarFilename != null ? 
-							"\"" + jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) + "\"" : // adding quotes to deal with spaces in path MF2022-09-13
-							"\"" + ObjectUtility.getTrueRootPath(REnvironment.class) + "\"";  // adding quotes to deal with spaces in path MF2022-09-13
+						jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) : // adding quotes to deal with spaces in path MF2022-09-13
+						ObjectUtility.getTrueRootPath(REnvironment.class);  // adding quotes to deal with spaces in path MF2022-09-13
+//							"\"" + jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) + "\"" : // adding quotes to deal with spaces in path MF2022-09-13
+//							"\"" + ObjectUtility.getTrueRootPath(REnvironment.class) + "\"";  // adding quotes to deal with spaces in path MF2022-09-13
 				AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + classPath);
 				
 				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);

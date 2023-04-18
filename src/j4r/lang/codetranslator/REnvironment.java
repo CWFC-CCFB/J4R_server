@@ -19,8 +19,6 @@
  */
 package j4r.lang.codetranslator;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -28,37 +26,33 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.InvalidParameterException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
-import java.util.logging.SimpleFormatter;
 
 import j4r.app.AbstractGenericEngine;
-import j4r.lang.J4RSystem;
 import j4r.lang.reflect.ReflectUtility;
-import j4r.multiprocess.JavaProcess;
-import j4r.multiprocess.JavaProcessWrapper;
 import j4r.net.server.BasicClient;
-import j4r.net.server.JavaGatewayServer;
-import j4r.net.server.ServerConfiguration;
-import j4r.util.JarUtility;
-import j4r.util.ObjectUtility;
 
+/**
+ * The REnvironment class creates Java objects and executes Java methods
+ * from R code. <br>
+ * <br>
+ * It inherits from the ConcurrentHashMap class. The Map contains the instances
+ * that are produced by the R code. References to these instances from R are 
+ * through this map. The first key is the hashcode. The second key ensures a protection
+ * against hash collision. 
+ * @author Mathieu Fortin - July 2020
+ */
 @SuppressWarnings("serial")
-public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<Object>>> { // first integer : hahscode, second integer : collider
+public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<Object>>> { 
 	
-	private static final String FIRSTCALL = "-firstcall";
-	
-	private static final String LOGLEVEL = "-loglevel";
+//	private static final String FIRSTCALL = "-firstcall";
 	
 	public static final String MainSplitter = "/;";
 	
@@ -85,21 +79,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		PrimitiveTypeMap.put("logical", boolean.class);
 		PrimitiveTypeMap.put("long", long.class);
 		PrimitiveTypeMap.put("float", float.class);
-	}
-
-	static class InternalShutDownHook extends Thread {
-		
-		final JavaProcessWrapper rGatewayProcessWrapper;
-		
-		InternalShutDownHook(JavaProcessWrapper rGatewayProcessWrapper) {
-			this.rGatewayProcessWrapper = rGatewayProcessWrapper;
-		}
-		
-		@Override
-		public void run() {
-			rGatewayProcessWrapper.cancel(true);
-		}
-		
 	}
 
 	
@@ -241,8 +220,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	protected final static String InternalMapSize = "size";
 	protected final static String FieldCode = "field";
 
-	private static final Random RANDOM = new Random();
-	
 
 	/**
 	 * Process the request.
@@ -277,7 +254,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 
 	private Object getClassInfo(String[] requestStrings) throws ClassNotFoundException {
 		String classname = requestStrings[1];
-		Class clazz;
+		Class<?> clazz;
 		boolean isArray;
 		if (classname.startsWith("[")) {
 			clazz = Object.class;
@@ -462,11 +439,6 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 
-	private static int generateSecurityKey() {
-		return RANDOM.nextInt();
-	}
-	
-	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object processMethod(String[] requestStrings) throws Exception {
 		Class clazz = null;
@@ -572,6 +544,18 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 
+	/**
+	 * Finds the nearest method. <br>
+	 * <br>
+	 * The methods are ranked according to the degree of proximity. The method with the 
+	 * degree of proximity closer to 0 (but not negative) is selected.
+	 * 
+	 * @param clazz the class instance 
+	 * @param methodName the name of the method
+	 * @param parameterTypes the parameters that are available
+	 * @return the method that best fits the parameters.
+	 * @throws NoSuchMethodException if no method is available
+	 */
 	@SuppressWarnings("rawtypes")
 	private Method findNearestMethod(Class clazz, String methodName, List<Class<?>> parameterTypes) throws NoSuchMethodException {
 		Method[] methods = clazz.getMethods();
@@ -643,6 +627,15 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
+	/**
+	 * Provides the degree of proximity between two arrays of classes.<br>
+	 * <br>
+	 * @param ref
+	 * @param obs
+	 * @return the degree of proximity. A value of -1 means no match. A value of 0 means a perfect
+	 * match while values greater than 0 means a partial match.
+	 * 0 
+	 */
 	protected static double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
 		if (ref == null && obs == null) {
 			return 0d;
@@ -693,6 +686,17 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return false;
 	}
 	
+	/**
+	 * Provides a degree of proximity for two classes. <br>
+	 * <br>
+	 * A degree of proximity of 0 means that instance cl2 is of the same class as instance refcl1. 
+	 * A degree of proximity greater than 0 implies that the class of cl2 is a subclass of that of refcl1. 
+	 * The interface implementation is also considered in the calculation of the proximity.
+	 * 
+	 * @param refcl1 the reference instance
+	 * @param cl2 the instance that is compared to the reference
+	 * @return the degree of proximity
+	 */
 	protected static double isAssignableOfThisClass(Class<?> refcl1, Class<?> cl2) {
 		int degree = 0;
 		Class<?> cl = cl2;
@@ -715,8 +719,19 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		}
 	}
 	
+	/**
+	 * Finds the nearest constructor. <br>
+	 * <br>
+	 * The constructors are ranked according to the degree of proximity. The constructor with the 
+	 * degree of proximity closer to 0 (but not negative) is selected.
+	 * 
+	 * @param clazz the class instance 
+	 * @param parameterTypes the parameters that are available
+	 * @return the constructor that best fits the parameters.
+	 * @throws NoSuchMethodException if no constructor is available
+	 */
 	@SuppressWarnings("rawtypes")
-	private Constructor findNearestConstructor(Class clazz, List<Class<?>> parameterTypes) throws NoSuchMethodException {
+	protected static Constructor findNearestConstructor(Class clazz, List<Class<?>> parameterTypes) throws NoSuchMethodException {
 		Constructor[] constructors = clazz.getConstructors();
 		List<ExecutableWrapper<Constructor>> possibleMatches = new ArrayList<ExecutableWrapper<Constructor>>();
 		for (Constructor constructor : constructors) {
@@ -806,7 +821,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 				try {
 					constructor = clazz.getConstructor(paramTypes);
 				} catch (NoSuchMethodException e) {		
-					constructor = findNearestConstructor(clazz, Arrays.asList(paramTypes));		// TODO test this code
+					constructor = findNearestConstructor(clazz, Arrays.asList(paramTypes));		
 				} 			
 				return constructor.newInstance(paramValues);
 			}
@@ -873,224 +888,4 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 		return wrappers;
 	}
 
-	private static int[] parsePorts(String str) {
-		String[] p = str.split(JavaGatewayServer.PortSplitter);
-		int[] ports = new int[p.length];
-		for (int i = 0; i < p.length; i++) {
-			ports[i] = Integer.parseInt(p[i]);
-		}
-		return ports;
-	}
-	
-	private static void createLogFile(boolean isFirstCall, String wd) {
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd");  
-		LocalDateTime now = LocalDateTime.now();  
-		File f;
-		if (isFirstCall) {
-			f = new File(System.getProperty("java.io.tmpdir") + File.separator + "J4RServerStarter" + dtf.format(now) + ".log");
-		} else {
-			if (wd != null && new File(wd).isDirectory()) {
-				f = new File(wd + File.separator + "J4RServer" + dtf.format(now) + ".log");
-			} else {
-				f = new File(System.getProperty("java.io.tmpdir") + File.separator + "J4RServer" + dtf.format(now) + ".log");
-			}
-		}
-		if (f.exists())
-			f.delete();
-		try {
-			FileHandler fh = new FileHandler(f.getAbsolutePath());  
-		    AbstractGenericEngine.J4RLogger.addHandler(fh);
-	        SimpleFormatter formatter = new SimpleFormatter();  
-	        fh.setFormatter(formatter);  
-		} catch (Exception e) {
-			AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to create log file!");
-		}
-	}
-	
-	
-	/**
-	 * Main entry point for creating a REnvironment hosted by a Java local gateway server. <br>
-	 * <br>
-	 * To define the classpath, use the "-ext" plus the different paths separated by the REnvironment.ClassPathSeparator 
-	 * variable (e.g. <code> -ext C:\myExtention\*::C:\myClasses\</code>).
-	 * 
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		if (args == null || args.length == 0) {
-			System.out.println("Usage: [-firstcall <value>] [-ports <value>] [-backdoorport <value>]");
-			System.out.println("       [-key <value>] [-public <value>] [-loglevel <value>]");
-			System.out.println("");
-			System.out.println("   firstcall     either true or false");
-			System.out.println("   ports         one positive integer or a series of integer separated by :");
-			System.out.println("                 e.g. 18000:18001");
-			System.out.println("   backdoorport  two integers seperated by :   e.g. 50000:50001");
-			System.out.println("   key           an integer");
-			System.out.println("   public        either on or off");
-			System.out.println("   loglevel      INFO, FINE, FINER, FINEST");
-			return;
-		}
-		JavaGatewayServer server = null;
-		try {
-			List<String> arguments = J4RSystem.setClassicalOptions(args);
-			String firstCall = J4RSystem.retrieveArgument(FIRSTCALL, arguments);
-			String logLevel = J4RSystem.retrieveArgument(LOGLEVEL, arguments);
-			if (logLevel != null) {
-				Level l = null;
-				try {
-					l = Level.parse(logLevel.toUpperCase());
-					AbstractGenericEngine.J4RLogger.setLevel(l);
-				} catch(Exception e) {
-					AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to set this log level: " + logLevel);
-				}
-			}
-			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
-				createLogFile(true, null);
-				List<String> newCommands = new ArrayList<String>();
-				newCommands.add(REnvironment.class.getName());
-				String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
-				String classPath = jarFilename != null ? 
-						jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) : // adding quotes to deal with spaces in path MF2022-09-13
-						ObjectUtility.getTrueRootPath(REnvironment.class);  // adding quotes to deal with spaces in path MF2022-09-13
-//							"\"" + jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) + "\"" : // adding quotes to deal with spaces in path MF2022-09-13
-//							"\"" + ObjectUtility.getTrueRootPath(REnvironment.class) + "\"";  // adding quotes to deal with spaces in path MF2022-09-13
-				AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + classPath);
-				
-				String extensionPath = J4RSystem.retrieveArgument(JavaGatewayServer.EXTENSION, arguments);
-				if (extensionPath != null) {
-					StringBuilder sb = new StringBuilder();
-					String[] classPaths = extensionPath.split(REnvironment.ClassPathSeparator);
-					for (int i = 0; i < classPaths.length; i++) {
-						String thisClassPath = "\"" + classPaths[i] + "\""; // adding quotes to deal with spaces in path MF2022-09-13
-						sb.append(i == 0 ? 
-								thisClassPath : 
-									File.pathSeparatorChar + thisClassPath);
-					}
-					classPath  = classPath + File.pathSeparatorChar + sb.toString();
-				}
-				
-				String port = J4RSystem.retrieveArgument(JavaGatewayServer.PORT, arguments);
-				if (port != null) {
-					String[] p = port.split(JavaGatewayServer.PortSplitter);
-					for (int i = 0; i < p.length; i++) {
-						if (Integer.parseInt(p[i]) < 0) {
-							throw new InvalidParameterException("Port numbers should be integers equal to or greater than 0!");
-						};
-					}
-					newCommands.add(JavaGatewayServer.PORT);
-					newCommands.add(port);
-				} else {
-					String nbPorts = J4RSystem.retrieveArgument(JavaGatewayServer.NB_PORTS, arguments);
-					if (nbPorts == null) { // make sure there is at least one port
-						newCommands.add(JavaGatewayServer.NB_PORTS);
-						newCommands.add("1");
-					} else {
-						newCommands.add(JavaGatewayServer.NB_PORTS);
-						newCommands.add(nbPorts);
-					}
-				}
-
-				String backdoorport = J4RSystem.retrieveArgument(JavaGatewayServer.BACKDOORPORT, arguments);
-				if (backdoorport != null) {
-					String[] p = backdoorport.split(JavaGatewayServer.PortSplitter);
-					if (p.length != 2) {
-						throw new InvalidParameterException("There should be two backdoor ports!");
-					}
-					for (int i = 0; i < p.length; i++) {
-						if (Integer.parseInt(p[i]) < 0) {
-							throw new InvalidParameterException("Backdoor port numbers should be integers equal to or greater than 0!");
-						};
-					}
-					newCommands.add(JavaGatewayServer.BACKDOORPORT);
-					newCommands.add(backdoorport);
-				}
-				
-				String wd = J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments);
-				newCommands.add(JavaGatewayServer.WD);
-				newCommands.add(wd);
-
-				String memorySizeStr = J4RSystem.retrieveArgument(JavaGatewayServer.MEMORY, arguments);
-				Integer memorySize = null;
-				if (memorySizeStr != null) {
-					try {
-						memorySize = Integer.parseInt(memorySizeStr);
-					} catch (Exception e) {
-						memorySize = null;
-					}
-				}
-				
-				String headlessModeStr = J4RSystem.retrieveArgument(JavaGatewayServer.HEADLESS, arguments);
-				boolean headlessMode = true;
-				if (headlessModeStr != null && headlessModeStr.equals("false")) {
-					headlessMode = false;
-				}
-				
-				File jarFile = new File(REnvironment.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-				File rootPath = jarFile.getParentFile();
-
-				JavaProcessWrapper rGatewayProcessWrapper = new JavaProcessWrapper("Java server", newCommands, rootPath);
-				Runtime.getRuntime().addShutdownHook(new InternalShutDownHook(rGatewayProcessWrapper));
-				JavaProcess rGatewayProcess = rGatewayProcessWrapper.getInternalProcess();
-				rGatewayProcess.setClassPath(classPath);
-				if (memorySize != null) {
-					rGatewayProcess.setJVMMemory(memorySize);
-				}
-				if (headlessMode) {
-					rGatewayProcess.setHeadless(true);
-				}
-				if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8")) {
-					rGatewayProcess.setOpenModuleForVersionsLaterThan8Enabled(true);
-				}
-				rGatewayProcessWrapper.run();
-				System.exit(0);
-			}
-			String portStr = J4RSystem.retrieveArgument(JavaGatewayServer.PORT, arguments);
-			int[] listeningPorts;
-			if (portStr != null) {
-				listeningPorts = parsePorts(portStr);
-			} else {
-				String nbPortsStr = J4RSystem.retrieveArgument(JavaGatewayServer.NB_PORTS, arguments);
-				int nbPorts;
-				if (nbPortsStr == null) {
-					nbPorts = 1;
-				} else {
-					nbPorts = Integer.parseInt(nbPortsStr);
-				}
-				listeningPorts = new int[nbPorts];
-			}
-			String wd = J4RSystem.retrieveArgument(JavaGatewayServer.WD, arguments);
-			createLogFile(false, wd);
-			String backdoorportStr = J4RSystem.retrieveArgument(JavaGatewayServer.BACKDOORPORT, arguments);
-			int[] backdoorports;
-			if (backdoorportStr != null) {
-				backdoorports = parsePorts(backdoorportStr);
-			} else {
-				backdoorports = new int[2];
-			}
-			String publicMode = J4RSystem.retrieveArgument(JavaGatewayServer.PUBLIC, arguments);
-			int key;
-			boolean isPublic = false;
-			if (publicMode != null && publicMode.trim().toLowerCase().equals("on")) {
-				isPublic = true;
-				String keyStr = J4RSystem.retrieveArgument(JavaGatewayServer.KEY, arguments);
-				key = Integer.parseInt(keyStr);
-			} else {
-				key = generateSecurityKey();
-			}
-			ServerConfiguration conf;
-			if (isPublic) {
- 				conf = new ServerConfiguration(1, 10, listeningPorts, backdoorports, key);
-			} else {
- 				conf = new ServerConfiguration(listeningPorts, backdoorports, key, wd);
-			}
-			server = new JavaGatewayServer(conf, null);	// null: no need for a main instance 
-			server.startApplication();
-		} catch (Exception e) {
-			System.err.println("Error:" + e.getMessage());
-			System.exit(1);
-		}
-	}
-	
-	
 }

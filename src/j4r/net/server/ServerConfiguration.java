@@ -22,10 +22,13 @@ package j4r.net.server;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
+
+import j4r.net.PortBindingException;
 
 public class ServerConfiguration implements Serializable {
 
@@ -137,9 +140,17 @@ public class ServerConfiguration implements Serializable {
 	protected List<ServerSocket> createServerSockets() throws IOException {
 		List<ServerSocket> sockets = new ArrayList<ServerSocket>();
 		for (int port : listiningPorts) {
-			sockets.add(new ServerSocket(port));
+			sockets.add(createServerSocket(port));
 		}
 		return sockets;
+	}
+	
+	protected static ServerSocket createServerSocket(int port) throws IOException {
+		try {
+			return new ServerSocket(port);
+		} catch (BindException e) {
+			throw new PortBindingException(port);
+		}
 	}
 	
 	private void checkPort(int port, String portType) {

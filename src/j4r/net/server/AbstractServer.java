@@ -22,12 +22,12 @@ package j4r.net.server;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -67,7 +67,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			super("Back door thread");
 			setDaemon(true);
 			this.port = port;
-			emergencySocket = new ServerSocket(port);
+			emergencySocket = ServerConfiguration.createServerSocket(port);
 			start();
 		}
 		
@@ -252,18 +252,19 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				}
 				i++;
 			}
-			
+	
 			backdoorThread = new BackDoorThread(configuration.internalPorts[0]);
 
-			ServerSocket gcServerSocket = new ServerSocket(configuration.internalPorts[1]);
+			ServerSocket gcServerSocket = ServerConfiguration.createServerSocket(configuration.internalPorts[1]);
 			gcReceiverThread = new CallReceiverThread(gcServerSocket, 99);
 			for (int j = 1; j <= configuration.numberOfClientThreadsPerReceiver; j++) {
 				gcThreads.add(createClientThread(gcReceiverThread, 99 * 1000 + j));		// i + 1 serves as id
 			}
 
-		} catch (IOException e) {
-			requestShutdown();
-			throw new Exception("Unable to initialize the server: " + e.getMessage());
+		} catch (BindException e1) {
+			throw e1;
+		} catch (IOException e2) {
+			throw new Exception("Unable to initialize the server: " + e2.getMessage());
 		}
 		listeners = new CopyOnWriteArrayList<PropertyChangeListener>();
 	}

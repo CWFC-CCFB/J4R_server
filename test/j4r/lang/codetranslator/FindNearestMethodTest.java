@@ -1,7 +1,7 @@
 /*
  * This file is part of the j4r library.
  *
- * Copyright (C) 2020-2022 Her Majesty the Queen in right of Canada
+ * Copyright (C) 2020-2023 His Majesty the King in right of Canada
  * Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service.
  *
  * This library is free software; you can redistribute it and/or
@@ -19,6 +19,10 @@
  */
 package j4r.lang.codetranslator;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,7 +30,7 @@ import org.junit.Test;
 public class FindNearestMethodTest {
 
 	@Test
-	public void testScoreForArrays() {
+	public void scoreForArraysTest() {
 		FakeClass2[] obsArray = new FakeClass2[2];
 		FakeClass[] refArray = new FakeClass[3];
 		Class<?>[] refTypes = new Class<?>[] {refArray.getClass()};
@@ -34,6 +38,18 @@ public class FindNearestMethodTest {
 		
 		double score = REnvironment.doParameterTypesMatch(refTypes, obsTypes);
 		Assert.assertEquals("Testing score", 1.0, score, 1E-8);
+	}
+	
+	@Test 
+	public void findNearestConstructorTest() throws NoSuchMethodException {
+		List<Class<?>> parms1 = new ArrayList<Class<?>>();
+		parms1.add(int.class);
+		Constructor c1 = REnvironment.findNearestConstructor(ArrayList.class, parms1);
+		
+		List<Class<?>> parms2 = new ArrayList<Class<?>>();
+		parms2.add(Integer.class);
+		Constructor c2 = REnvironment.findNearestConstructor(ArrayList.class, parms2);
+		Assert.assertEquals("Testing if the two constructors are the same", c1, c2);
 	}
 	
 }

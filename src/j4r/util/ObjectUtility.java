@@ -91,7 +91,16 @@ public final class ObjectUtility {
 		return anyClass.getPackage().getName().replace(".", ObjectUtility.PathSeparator) + ObjectUtility.PathSeparator;
 	}
 
-
+	/**
+	 * Add quote marks to a string that contains a space.
+	 * @param str
+	 * @return the original string or the string with quote marks
+	 */
+	public static String quoteIfNeeded(String str) {
+		return str.contains(" ") ? 
+				"\"" + str + "\"" :
+					str;
+	}
 	
 	
 	

@@ -1,7 +1,8 @@
 # This workflow is inspired by the example shown at
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle 
+#
 # Author Mathieu Fortin
-
+#
 # GitHub recommends pinning actions to a commit SHA.
 # To get a newer version, you will need to update the SHA.
 # You can also reference a tag or branch, but the action may change without warning.
@@ -26,8 +27,8 @@ jobs:
         distribution: temurin
         java-version: ${{ matrix.java }}
     
-    - name: Setup and execute Gradle 'build' task
+    - name: Setup and execute Gradle 'integrationTest' task
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: build
+        arguments: integrationTest
         

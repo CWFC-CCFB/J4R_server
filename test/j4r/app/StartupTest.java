@@ -24,11 +24,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -40,12 +35,10 @@ import j4r.net.PortBindingException;
 
 public class StartupTest {
 
-	private static long getNbSecondsSinceLastModification(String filename) throws IOException {
+	private static double getNbSecondsSinceLastModification(String filename) throws IOException {
 		System.out.println(filename);
-		Path p = Paths.get(filename);
-		Instant t = Files.readAttributes(p, BasicFileAttributes.class).lastModifiedTime().toInstant();
-		Instant now = Instant.now();
-		long nbSecs = now.getEpochSecond() - t.getEpochSecond();
+		File f = new File(filename);
+		double nbSecs = (System.currentTimeMillis() - f.lastModified()) * .001;
 		return nbSecs;
 	}
 	
@@ -69,7 +62,7 @@ public class StartupTest {
 		
 		Thread.sleep(2000);
 		String J4RTmpFilename = System.getProperty("java.io.tmpdir") + File.separator + "J4RTmpFile";
-		long nbSecs = getNbSecondsSinceLastModification(J4RTmpFilename); 
+		double nbSecs = getNbSecondsSinceLastModification(J4RTmpFilename); 
 		Assert.assertTrue("Time since creation of J4RTmpFile smaller than 3 sec.", nbSecs < 3);
 		
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
@@ -112,7 +105,7 @@ public class StartupTest {
 		Thread.sleep(2000);
 		
 		String logFilename = Startup.LogFile.getAbsolutePath();
-		long nbSecs = getNbSecondsSinceLastModification(logFilename); 
+		double nbSecs = getNbSecondsSinceLastModification(logFilename); 
 		Assert.assertTrue("Time since creation of log file smaller than 3 sec.", nbSecs < 3);
 
 		Scanner scanner = new Scanner(new File(logFilename));

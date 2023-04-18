@@ -50,7 +50,7 @@ public class JavaGatewayServer extends AbstractServer {
 	
 	public static final String EXTENSION = "-ext";
 	public static final String PORT = "-ports"; 
-	public static final String BACKDOORPORT = "-backdoorport";
+	public static final String BACKDOORPORT = "-backdoorports";
 	public static final String NB_PORTS = "-nbports";
 	public static final String WD = "-wd";
 	public static final String MEMORY = "-mem";
@@ -64,6 +64,7 @@ public class JavaGatewayServer extends AbstractServer {
 	 * A wrapper for Exception.
 	 * @author Mathieu Fortin
 	 */
+	@SuppressWarnings("serial")
 	final class JavaGatewayException extends Exception {
 		
 		final Throwable nestedException;
@@ -202,6 +203,10 @@ public class JavaGatewayServer extends AbstractServer {
 		Instance = this;
 	}
 
+	static void cleanupAfterTesting() {
+		Instance = null;
+	}
+	
 	/**
 	 * Provide the main instance. <br>
 	 * <br> 
@@ -276,24 +281,5 @@ public class JavaGatewayServer extends AbstractServer {
 		return PotentialCharsets;
 	}
 
-//	/**
-//	 * This entry point can be used to start the J4R server in standalone mode for Capsis4R usage
-//	 *  
-//	 */
-//	public static void main(String[] args) throws Exception {
-//	
-//		if (args.length < 4) {
-//			System.out.print("Usage : JavaGatewayServer port backdoorPort garbageCollectorPort key");
-//		}
-//		
-//		int port = Integer.valueOf(args[0]);
-//		int portBackDoor = Integer.valueOf(args[1]);
-//		int portGarbageCollect = Integer.valueOf(args[2]);
-//		int key = Integer.valueOf(args[3]);
-//		
-//		ServerConfiguration servConf = new ServerConfiguration(1, 10, new int[] {port}, new int[] {portBackDoor, portGarbageCollect}, key);
-//		JavaGatewayServer server = new JavaGatewayServer(servConf, null);
-//		server.startApplication();
-//	}
 	
 }

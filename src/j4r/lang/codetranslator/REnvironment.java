@@ -52,15 +52,11 @@ import j4r.net.server.BasicClient;
 @SuppressWarnings("serial")
 public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<Object>>> { 
 	
-//	private static final String FIRSTCALL = "-firstcall";
-	
 	public static final String MainSplitter = "/;";
 	
 	public static final String SubSplitter = "/,";
 	
 	public static final String ColliderSplitter = "_";
-	
-	public static final String ClassPathSeparator = "::";
 	
 	protected static final String R_NUMERIC_TOKEN = "nu";
 	protected static final String R_INTEGER_TOKEN = "in";

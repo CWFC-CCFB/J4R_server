@@ -66,8 +66,8 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		BackDoorThread(int port) throws IOException {
 			super("Back door thread");
 			setDaemon(true);
-			this.port = port;
 			emergencySocket = ServerConfiguration.createServerSocket(port);
+			this.port = emergencySocket.getLocalPort();
 			start();
 		}
 		
@@ -254,8 +254,12 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			}
 	
 			backdoorThread = new BackDoorThread(configuration.internalPorts[0]);
-
 			ServerSocket gcServerSocket = ServerConfiguration.createServerSocket(configuration.internalPorts[1]);
+			if (!this.isPrivate()) {
+				System.out.println("Emergency port is " + backdoorThread.port);
+				System.out.println("Garbage collection port is " + gcServerSocket.getLocalPort());
+			}
+			
 			gcReceiverThread = new CallReceiverThread(gcServerSocket, 99);
 			for (int j = 1; j <= configuration.numberOfClientThreadsPerReceiver; j++) {
 				gcThreads.add(createClientThread(gcReceiverThread, 99 * 1000 + j));		// i + 1 serves as id

@@ -74,16 +74,7 @@ public class J4RSystem {
 	}
 	
 
-//	/**
-//	 * This method returns the three digits of the JVM version
-//	 * @return a 1x3 array of integers
-//	 */
-//	public static int[] getJVMVersion() {
-//		String jvmVersion = ObjectUtility.getJVMVersion();
-//		return parseJVMVersion(jvmVersion);
-//	}
 
-	
 	/**
 	 * Returns the architecture of the JVM, i.e. either 32-Bit, 64-Bit or unknown.
 	 * @return a String

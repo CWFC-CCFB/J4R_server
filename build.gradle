@@ -105,7 +105,7 @@ jar {
             "Implementation-Title": "J4R server",
             "Implementation-Version": project.version,
             "Implementation-Vendor": "Canadian Wood Fibre Centre",
-            "Main-Class": "j4r.lang.codetranslator.REnvironment",
+            "Main-Class": "j4r.app.Startup",
 		)
 
         into ('/') {
@@ -129,7 +129,7 @@ task install(type: Copy) {
 	from jar
 	into "${installDir}"
 	doLast {
-        new File("${installDir}", "j4r_server.bat").text = "java -Xmx8000m -cp ./class;./ext/*;./j4r_server-${project.version}.jar j4r.lang.codetranslator.REnvironment -ports 18000 -backdoorport 50000:50001 -key 212 -public on"
+        new File("${installDir}", "j4r_server.bat").text = "java -Xmx8000m -cp ./class;./ext/*;./j4r_server-${project.version}.jar j4r.app.Startup -ports 0 -backdoorport 0:0 -public on"
     }
 }
 

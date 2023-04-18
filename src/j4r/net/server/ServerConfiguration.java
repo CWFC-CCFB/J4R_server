@@ -140,7 +140,11 @@ public class ServerConfiguration implements Serializable {
 	protected List<ServerSocket> createServerSockets() throws IOException {
 		List<ServerSocket> sockets = new ArrayList<ServerSocket>();
 		for (int port : listiningPorts) {
-			sockets.add(createServerSocket(port));
+			ServerSocket ss = createServerSocket(port);
+			sockets.add(ss);
+			if (!isPrivateServer()) {
+				System.out.println("Listening to port " + ss.getLocalPort());
+			}
 		}
 		return sockets;
 	}

@@ -38,8 +38,11 @@ import j4r.net.server.ServerConfiguration;
  */
 public class Startup {
 	
-	static boolean TestPurpose = false;
-
+	/*
+	 * Only for testing. This member should be left to false. 
+	 */
+	public static boolean TestPurpose = false;
+	
 	private static final String LOGLEVEL = "-loglevel";
 	
 	private static final Random RANDOM = new Random();
@@ -79,18 +82,6 @@ public class Startup {
 		}
 	}
 
-//	public static String findClassPath() {
-//		String jarFilename = JarUtility.getJarFileIAmInIfAny(REnvironment.class);
-//
-//		String classPath = jarFilename != null ? 
-//				jarFilename.substring(jarFilename.lastIndexOf(ObjectUtility.PathSeparator) + 1) : // adding quotes to deal with spaces in path MF2022-09-13
-//				ObjectUtility.getTrueRootPath(REnvironment.class);  // adding quotes to deal with spaces in path MF2022-09-13
-//		
-//		AbstractGenericEngine.J4RLogger.log(Level.INFO, "ClassPath = " + classPath);
-//		return classPath;
-//	}
-	
-
 //	FORMER documentation	
 //	 * To define the classpath, use the "-ext" plus the different paths separated by the REnvironment.ClassPathSeparator 
 //	 * variable (e.g. <code> -ext C:\myExtention\*::C:\myClasses\</code>).
@@ -104,13 +95,11 @@ public class Startup {
 	 */
 	public static void main(String[] args) throws Exception {
 		if (args == null || args.length == 0) {
-			System.out.println("Usage: [-firstcall <value>] [-ports <value>] [-backdoorport <value>]");
+			System.out.println("Usage: [-ports <value>] [-backdoorport <value>]");
 			System.out.println("       [-key <value>] [-public <value>] [-loglevel <value>]");
 			System.out.println("");
-			System.out.println("   firstcall     either true or false");
-			System.out.println("   ports         one positive integer or a series of integer separated by :");
-			System.out.println("                 e.g. 18000:18001");
-			System.out.println("   backdoorport  two integers seperated by :   e.g. 50000:50001");
+			System.out.println("   ports         one positive integer or a series of integer separated by \":\"  e.g. 18000:18001");
+			System.out.println("   backdoorports two integers seperated by \":\"   e.g. 50000:50001");
 			System.out.println("   key           an integer (only needed if public is set to on)");
 			System.out.println("   public        either on or off");
 			System.out.println("   loglevel      INFO, FINE, FINER, FINEST");
@@ -160,13 +149,23 @@ public class Startup {
 			if (publicMode != null && publicMode.trim().toLowerCase().equals("on")) {
 				isPublic = true;
 				String keyStr = J4RSystem.retrieveArgument(JavaGatewayServer.KEY, arguments);
-				key = Integer.parseInt(keyStr);
+				if (keyStr != null) {
+					try {
+						key = Integer.parseInt(keyStr);
+					} catch (NumberFormatException e) {
+						AbstractGenericEngine.J4RLogger.log(Level.WARNING, "Key " + keyStr + " cannot be parsed! A security key will be automatically generated!");
+						key = generateSecurityKey();
+					}
+				} else {
+					key = generateSecurityKey();
+				}
 			} else {
 				key = generateSecurityKey();
 			}
 			ServerConfiguration conf;
 			if (isPublic) {
  				conf = new ServerConfiguration(1, 10, listeningPorts, backdoorports, key);
+ 				System.out.println("Security key is set to " + key);
 			} else {
  				conf = new ServerConfiguration(listeningPorts, backdoorports, key, wd);
 			}

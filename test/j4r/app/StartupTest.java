@@ -63,49 +63,29 @@ public class StartupTest {
 		Startup.main(arguments.toArray(new String[] {}));
 		
 		Thread.sleep(2000);
+		
 		String J4RTmpFilename = System.getProperty("java.io.tmpdir") + File.separator + "J4RTmpFile";
 		double nbSecs = getNbSecondsSinceLastModification(J4RTmpFilename); 
-		Assert.assertTrue("Time since creation of J4RTmpFile smaller than 3 sec.", nbSecs < LagTime);
-		
+		Assert.assertTrue("Time since creation of J4RTmpFile smaller than " + LagTime + " sec.", nbSecs < LagTime);
+
+		String logFilename = Startup.LogFile.getAbsolutePath();
+		nbSecs = getNbSecondsSinceLastModification(logFilename); 
+		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
+
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
 		String fileContent = scanner.nextLine();
 		String[] content = fileContent.split(";");
 		Assert.assertEquals("Testing file content", 3, content.length);
 		scanner.close();
-	}
 
-	/*
-	 * Test the creation of the log file plus its content.
-	 */
-	@Test
-	public void startupLogFileCreationTest() throws Exception {
-		List<String> arguments = new ArrayList<String>();
-		arguments.add("-ports");
-		arguments.add("0:0");
-		arguments.add("-backdoorport");
-		arguments.add("0:0");
-		arguments.add("-public");
-		arguments.add("off");
-		arguments.add("-loglevel");
-		arguments.add("INFO");
-		arguments.add("-wd");
-		arguments.add(System.getProperty("java.io.tmpdir"));
-		Startup.main(arguments.toArray(new String[] {}));
-		
-		Thread.sleep(2000);
-		
-		String logFilename = Startup.LogFile.getAbsolutePath();
-		double nbSecs = getNbSecondsSinceLastModification(logFilename); 
-		Assert.assertTrue("Time since creation of log file smaller than 3 sec.", nbSecs < LagTime);
-
-		Scanner scanner = new Scanner(new File(logFilename));
+		scanner = new Scanner(new File(logFilename));
 		String lastLine = null;
 		while(scanner.hasNextLine()) {
 			lastLine = scanner.nextLine();
 		}
 		Assert.assertEquals("Testing last line of log", "INFOS: Server started", lastLine);
 		scanner.close();
-		
+
 	}
 
 	@Test

@@ -41,6 +41,7 @@ public class StartupTest {
 		System.out.println(filename);
 		File f = new File(filename);
 		double nbSecs = (System.currentTimeMillis() - f.lastModified()) * .001;
+		System.out.println(nbSecs);
 		return nbSecs;
 	}
 	

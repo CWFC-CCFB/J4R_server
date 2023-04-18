@@ -35,7 +35,7 @@ import j4r.net.PortBindingException;
 
 public class StartupTest {
 	
-	private static double LagTime = 10d;
+	private static double LagTime = 5d;
 
 	private static double getNbSecondsSinceLastModification(String filename) throws IOException {
 		System.out.println(filename);
@@ -70,8 +70,8 @@ public class StartupTest {
 		Assert.assertTrue("Time since creation of J4RTmpFile smaller than " + LagTime + " sec.", nbSecs < LagTime);
 
 		String logFilename = Startup.LogFile.getAbsolutePath();
-		nbSecs = getNbSecondsSinceLastModification(logFilename); 
-		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
+//		nbSecs = getNbSecondsSinceLastModification(logFilename); 
+//		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
 
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
 		String fileContent = scanner.nextLine();

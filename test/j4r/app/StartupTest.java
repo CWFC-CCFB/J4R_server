@@ -46,7 +46,7 @@ public class StartupTest {
 	}
 	
 	/*
-	 * Test the creation of J4RTmpFile plus its content.
+	 * Test the creation of the J4RTmpFile and log files as well as their contents.
 	 */
 	@Test
 	public void startupJ4RTmpFileCreationTest() throws Exception {
@@ -70,8 +70,8 @@ public class StartupTest {
 		Assert.assertTrue("Time since creation of J4RTmpFile smaller than " + LagTime + " sec.", nbSecs < LagTime);
 
 		String logFilename = Startup.LogFile.getAbsolutePath();
-//		nbSecs = getNbSecondsSinceLastModification(logFilename); 
-//		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
+		nbSecs = getNbSecondsSinceLastModification(logFilename); 
+		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
 
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
 		String fileContent = scanner.nextLine();

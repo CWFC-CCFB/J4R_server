@@ -75,6 +75,7 @@ public class Startup {
 	        SimpleFormatter formatter = new SimpleFormatter();  
 	        fh.setFormatter(formatter);  
 		} catch (Exception e) {
+			System.out.println("I did not manage to create a log file (Exception thrown!)");
 			AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to create log file!");
 		}
 	}

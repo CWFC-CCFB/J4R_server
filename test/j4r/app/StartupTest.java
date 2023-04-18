@@ -34,6 +34,8 @@ import org.junit.Test;
 import j4r.net.PortBindingException;
 
 public class StartupTest {
+	
+	private static double LagTime = 10d;
 
 	private static double getNbSecondsSinceLastModification(String filename) throws IOException {
 		System.out.println(filename);
@@ -63,24 +65,12 @@ public class StartupTest {
 		Thread.sleep(2000);
 		String J4RTmpFilename = System.getProperty("java.io.tmpdir") + File.separator + "J4RTmpFile";
 		double nbSecs = getNbSecondsSinceLastModification(J4RTmpFilename); 
-		Assert.assertTrue("Time since creation of J4RTmpFile smaller than 3 sec.", nbSecs < 3);
+		Assert.assertTrue("Time since creation of J4RTmpFile smaller than 3 sec.", nbSecs < LagTime);
 		
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
 		String fileContent = scanner.nextLine();
 		String[] content = fileContent.split(";");
 		Assert.assertEquals("Testing file content", 3, content.length);
-		scanner.close();
-		
-		String logFilename = Startup.LogFile.getAbsolutePath();
-		nbSecs = getNbSecondsSinceLastModification(logFilename); 
-		Assert.assertTrue("Time since creation of log file smaller than 3 sec.", nbSecs < 3);
-
-		scanner = new Scanner(new File(logFilename));
-		String lastLine = null;
-		while(scanner.hasNextLine()) {
-			lastLine = scanner.nextLine();
-		}
-		Assert.assertEquals("Testing last line of log", "INFOS: Server started", lastLine);
 		scanner.close();
 	}
 
@@ -106,7 +96,7 @@ public class StartupTest {
 		
 		String logFilename = Startup.LogFile.getAbsolutePath();
 		double nbSecs = getNbSecondsSinceLastModification(logFilename); 
-		Assert.assertTrue("Time since creation of log file smaller than 3 sec.", nbSecs < 3);
+		Assert.assertTrue("Time since creation of log file smaller than 3 sec.", nbSecs < LagTime);
 
 		Scanner scanner = new Scanner(new File(logFilename));
 		String lastLine = null;

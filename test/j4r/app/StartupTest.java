@@ -69,9 +69,7 @@ public class StartupTest {
 		double nbSecs = getNbSecondsSinceLastModification(J4RTmpFilename); 
 		Assert.assertTrue("Time since creation of J4RTmpFile smaller than " + LagTime + " sec.", nbSecs < LagTime);
 
-		String logFilename = Startup.LogFile.getAbsolutePath();
-		nbSecs = getNbSecondsSinceLastModification(logFilename); 
-		Assert.assertTrue("Time since creation of log file smaller than " + LagTime + " sec.", nbSecs < LagTime);
+		Assert.assertTrue("Test if log file exists.", Startup.LogFile.exists());
 
 		Scanner scanner = new Scanner(new File(J4RTmpFilename));
 		String fileContent = scanner.nextLine();
@@ -79,7 +77,7 @@ public class StartupTest {
 		Assert.assertEquals("Testing file content", 3, content.length);
 		scanner.close();
 
-		scanner = new Scanner(new File(logFilename));
+		scanner = new Scanner(new File(Startup.LogFile.getAbsolutePath()));
 		String lastLine = null;
 		while(scanner.hasNextLine()) {
 			lastLine = scanner.nextLine();

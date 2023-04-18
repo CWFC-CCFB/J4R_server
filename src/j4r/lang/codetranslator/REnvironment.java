@@ -1,7 +1,7 @@
 /*
  * This file is part of the j4r library.
  *
- * Copyright (C) 2020-2021 Her Majesty the Queen in right of Canada
+ * Copyright (C) 2020-2023 His Majesty the King in right of Canada
  * Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service.
  *
  * This library is free software; you can redistribute it and/or

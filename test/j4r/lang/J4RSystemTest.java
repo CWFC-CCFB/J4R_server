@@ -32,7 +32,6 @@ public class J4RSystemTest {
 
 	@Test
 	public void addToClassPathSimpleTest1() throws Exception {
-//		String pathToTest1 = ObjectUtility.getPackagePath(getClass()).replace("bin", "test") + "addurltest1";
 		String pathToTest1 = ObjectUtility.getPackagePath(getClass()).replace("bin", "test") + "addurltest1";
 		try {
 			J4RSystem.addToClassPath(pathToTest1);

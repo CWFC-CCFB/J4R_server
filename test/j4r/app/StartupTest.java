@@ -41,6 +41,7 @@ import j4r.net.PortBindingException;
 public class StartupTest {
 
 	private static long getNbSecondsSinceLastModification(String filename) throws IOException {
+		System.out.println(filename);
 		Path p = Paths.get(filename);
 		Instant t = Files.readAttributes(p, BasicFileAttributes.class).lastModifiedTime().toInstant();
 		Instant now = Instant.now();

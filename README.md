@@ -1,3 +1,7 @@
+<!-- badges: start -->
+[![Java CI](https://github.com/CWFC-CCFB/j4r_server/actions/workflows/gradle.yml/badge.svg)](https://github.com/CWFC-CCFB/j4r_server/actions/workflows/gradle.yml)
+<!-- badges: end -->
+
 The j4r_server library is the Java part of the J4R package in R. 
 
 It makes it possible to process native Java code from the R environment. This library is included in the J4R package, but

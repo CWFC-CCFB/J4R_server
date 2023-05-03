@@ -181,14 +181,55 @@ public class J4RSystem {
 	}
 	
 	/**
+	 * Provides the different URLs in the class path. <br>
+	 * <br>
+	 * This method is only available for private server (local server). If called on a public server, it throws
+	 * a SecurityException. 
+	 * @return a List of String
+	 * @throws Exception a SecurityException if the server is public or a ReflectiveOperationExcception if reflection failed.
+	 * @deprecated Use the areThesePatternsInClassPath method instead
+	 */
+	@Deprecated
+	public static List<String> getClassPathURLs() throws ReflectiveOperationException {
+		if (JavaGatewayServer.isPublicServerRunning()) {
+			throw new SecurityException("The method getClassPathURLs is not accessible for public servers!");
+		}
+		return getInternalClassPathURLs();
+	}
+	
+	/**
+	 * Check if some patterns can be found in the class path. <br>
+	 * <br>
+	 * Typically this method is used to check if the server is running with the appropriate extensions.
+	 * 
+	 * @param patterns a List of patterns to be checked
+	 * @return the patterns that were not found
+	 * @throws ReflectiveOperationException
+	 */
+	public static List<String> checkIfPatternsAreInClassPath(List<String> patterns) throws ReflectiveOperationException {
+		List<String> patternsNotFound = new ArrayList<String>();
+		List<String> currentURLs = getInternalClassPathURLs();
+		for (String p : patterns) {
+			boolean found = false;
+			for (String url : currentURLs) {
+				if (url.contains(p)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				patternsNotFound.add(p);
+		}
+		return patternsNotFound;
+	}
+	
+	
+	/**
 	 * Provides the different URLs in the class path.
 	 * @return a List of String
 	 * @throws Exception
 	 */
-	public static List<String> getClassPathURLs() throws Exception {
-		if (JavaGatewayServer.isPublicServerRunning()) {
-			throw new GeneralSecurityException("The method getClassPathURLs is not accessible for public servers!");
-		}
+	private static List<String> getInternalClassPathURLs() throws ReflectiveOperationException {
 		URL[] urls;
 		if (J4RSystem.isCurrentJVMLaterThanThisVersion("15.9")) {
 			String[] classPathURLs = System.getProperty("java.class.path").split(Character.toString(File.pathSeparatorChar));
@@ -198,7 +239,7 @@ public class J4RSystem {
 			}
 			return urlStrings;
 		} else if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
-			Object urlClassPath = getURLClassPathWithJava9to15Versions();
+			Object urlClassPath = getURLClassPathObjectWithJava9to15Versions();
 			Method met = urlClassPath.getClass().getMethod("getURLs");
 			urls = (URL[]) met.invoke(urlClassPath);
 		} else {
@@ -211,6 +252,8 @@ public class J4RSystem {
 		}
 		return urlStrings;
 	}
+
+	
 	
 	/**
 	 * Dynamically adds a directory or a JAR file to the class path. The JVM must implement
@@ -220,7 +263,7 @@ public class J4RSystem {
 	 */
 	public static void addToClassPath(String filename) throws Exception {
 		if (JavaGatewayServer.isPublicServerRunning()) {
-			throw new GeneralSecurityException("The method addToClassPath is not accessible for public servers!");
+			throw new SecurityException("The method addToClassPath is not accessible for public servers!");
 		}
 		File f = new File(filename);
 		if (f.exists()) {
@@ -230,7 +273,7 @@ public class J4RSystem {
 			if (J4RSystem.isCurrentJVMLaterThanThisVersion("15.9")) {
 				throw new GeneralSecurityException("Java " + getJVMVersion() + " does not support dynamic classpaths. The library should be loaded through the JVM classpath argument.");
 			} else if (J4RSystem.isCurrentJVMLaterThanThisVersion("1.8.0")) {
-				target = getURLClassPathWithJava9to15Versions();
+				target = getURLClassPathObjectWithJava9to15Versions();
 				targetClass = target.getClass();
 			} else {
 				target = ClassLoader.getSystemClassLoader();
@@ -247,16 +290,16 @@ public class J4RSystem {
 	
 	
 	
-	private final static Object getURLClassPathWithJava9to15Versions() throws Exception {
+	private final static Object getURLClassPathObjectWithJava9to15Versions() throws ReflectiveOperationException {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 		try {
 			Field field = cl.getClass().getDeclaredField("ucp");
 			field.setAccessible(true);
 			return field.get(cl);
-		} catch (Exception e1) {
+		} catch (ReflectiveOperationException e1) {
 			Class clazz = Class.forName("java.lang.reflect.InaccessibleObjectException");
 			if (clazz.isAssignableFrom(e1.getClass())) {
-				throw new GeneralSecurityException("Java " + J4RSystem.jreVersion + " allows dynamic classpaths under certains conditions. You need to specify the JVM option --add-opens java.base/jdk.internal.loader=ALL-UNNAMED .");
+				throw new SecurityException("Java " + J4RSystem.jreVersion + " allows dynamic classpaths under certains conditions. You need to specify the JVM option --add-opens java.base/jdk.internal.loader=ALL-UNNAMED .");
 			} 
 			throw e1;
 		} 

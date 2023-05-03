@@ -21,6 +21,7 @@ package j4r.lang;
 
 import java.io.File;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -57,7 +58,6 @@ public class J4RSystemTest {
 		Assert.assertTrue("list size", list.size() > 0);
 	}
 
-
 	@Test
 	public void addToClassPathSimpleTest2() throws Exception {
 		String pathToTest2 = ObjectUtility.getPackagePath(getClass()).replace("bin", "test") + "addurltest2" + File.separator + "helloworldtest2.jar";
@@ -77,6 +77,19 @@ public class J4RSystemTest {
 			e.printStackTrace();
 			Assert.fail();
 		}
+	}
+	
+	@Test
+	public void checkPatternsTest() throws Exception {
+		List<String> patterns = new ArrayList<String>();
+		patterns.add("junit");
+		patterns.add("hamcrest");
+		patterns.add("myLibrary1");
+		patterns.add("myLibrary2");
+		List<String> urls = J4RSystem.getClassPathURLs();
+		List<String> patternsNotFound = J4RSystem.checkIfPatternsAreInClassPath(patterns);
+		Assert.assertEquals("Checking first output", "myLibrary1", patternsNotFound.get(0));
+		Assert.assertEquals("Checking second output", "myLibrary2", patternsNotFound.get(1));
 	}
 
 }

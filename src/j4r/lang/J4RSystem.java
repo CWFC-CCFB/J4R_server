@@ -229,7 +229,7 @@ public class J4RSystem {
 	 * @return a List of String
 	 * @throws Exception
 	 */
-	private static List<String> getInternalClassPathURLs() throws ReflectiveOperationException {
+	protected static List<String> getInternalClassPathURLs() throws ReflectiveOperationException {
 		URL[] urls;
 		if (J4RSystem.isCurrentJVMLaterThanThisVersion("15.9")) {
 			String[] classPathURLs = System.getProperty("java.class.path").split(Character.toString(File.pathSeparatorChar));

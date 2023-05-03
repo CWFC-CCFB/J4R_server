@@ -36,6 +36,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import j4r.app.AbstractGenericEngine;
+import j4r.lang.J4RSystem;
 import j4r.net.SocketWrapper;
 import j4r.net.TCPSocketWrapper;
 import j4r.net.server.ServerTask.ServerTaskID;
@@ -51,6 +52,12 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		EncodingIdentified,
 		EncodingUnidentified}
 
+	
+	static class J4RSystemExt extends J4RSystem {
+		private static List<String> getURLs() throws Exception {
+			return J4RSystem.getInternalClassPathURLs();
+		}
+	}
 	
 	/**
 	 * The BackDoorThread class processes the request one by one and close the socket after
@@ -264,7 +271,15 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 			for (int j = 1; j <= configuration.numberOfClientThreadsPerReceiver; j++) {
 				gcThreads.add(createClientThread(gcReceiverThread, 99 * 1000 + j));		// i + 1 serves as id
 			}
-
+			
+			if (!this.isPrivate()) {
+				System.out.println("Current class path:");
+				List<String> urls = J4RSystemExt.getURLs();
+				for (String url : urls) {
+					System.out.println(url);
+				}
+			}
+			
 		} catch (BindException e1) {
 			throw e1;
 		} catch (IOException e2) {

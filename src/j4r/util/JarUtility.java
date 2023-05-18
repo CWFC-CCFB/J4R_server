@@ -37,10 +37,10 @@ public class JarUtility {
 	}
 
 	/**
-	 * Return the jar file the class is located in if it is packaged. Otherwise,
-	 * it returns null. 
-	 * @param clazz
-	 * @return 
+	 * Provide the name of the jar file that contains this class. If the class has not been packaged
+	 * in a jar file, then the method returns null. 
+	 * @param clazz the class 
+	 * @return the name of the jar or null
 	 */
 	public static String getJarFileIAmInIfAny(Class<?> clazz) {
 		String className = clazz.getSimpleName();
@@ -56,9 +56,9 @@ public class JarUtility {
 	
 	/**
 	 * Return the manifest of a jar file.
-	 * @param jarFilePath
-	 * @return
-	 * @throws IOException
+	 * @param jarFilePath the path of the jar file
+	 * @return a Manifest object 
+	 * @throws IOException if an I/O error has occurred
 	 */
 	public static Manifest getManifestFromThisJarFile(String jarFilePath) throws IOException {
 		JarFile file = new JarFile(jarFilePath);

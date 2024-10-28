@@ -135,7 +135,7 @@ public abstract class AbstractGenericEngine {
 		}
 	}
 
-	public static Logger J4RLogger = Logger.getLogger("J4RLogger");
+	public static final Logger J4RLogger = Logger.getLogger("J4RLogger");
 	
 	protected LinkedBlockingQueue<AbstractGenericTask> queue;
 	protected List<String> tasksDone;

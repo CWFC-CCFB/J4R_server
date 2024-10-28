@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import j4r.lang.J4RSystem;
@@ -75,11 +76,11 @@ public class Startup {
 		try {
 			FileHandler fh = new FileHandler(LogFile.getAbsolutePath());  
 			fh.setLevel(Level.FINEST);
-		    AbstractGenericEngine.J4RLogger.addHandler(fh);
+		    getMainLogger().addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();  
 	        fh.setFormatter(formatter);  
 		} catch (Exception e) {
-			AbstractGenericEngine.J4RLogger.log(Level.SEVERE, "Unable to create log file!");
+			getMainLogger().log(Level.SEVERE, "Unable to create log file!");
 		}
 	}
 
@@ -87,6 +88,12 @@ public class Startup {
 //	 * To define the classpath, use the "-ext" plus the different paths separated by the REnvironment.ClassPathSeparator 
 //	 * variable (e.g. <code> -ext C:\myExtention\*::C:\myClasses\</code>).
 
+	/**
+	 * Provide the main logger for the J4R server.
+	 * @return a Logger instance
+	 */
+	public static Logger getMainLogger() {return AbstractGenericEngine.J4RLogger;}
+	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server. <br>
 	 * <br>
@@ -117,9 +124,9 @@ public class Startup {
 				Level l = null;
 				try {
 					l = Level.parse(logLevel.toUpperCase());
-					AbstractGenericEngine.J4RLogger.setLevel(l);
+					getMainLogger().setLevel(l);
 				} catch(Exception e) {
-					AbstractGenericEngine.J4RLogger.log(Level.WARNING, "Unable to set this log level: " + logLevel);
+					getMainLogger().log(Level.WARNING, "Unable to set this log level: " + logLevel);
 				}
 			}
 			
@@ -154,7 +161,7 @@ public class Startup {
 					try {
 						key = Integer.parseInt(keyStr);
 					} catch (NumberFormatException e) {
-						AbstractGenericEngine.J4RLogger.log(Level.WARNING, "Key " + keyStr + " cannot be parsed! A security key will be automatically generated!");
+						getMainLogger().log(Level.WARNING, "Key " + keyStr + " cannot be parsed! A security key will be automatically generated!");
 						key = generateSecurityKey();
 					}
 				} else {

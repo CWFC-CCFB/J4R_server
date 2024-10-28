@@ -74,6 +74,7 @@ public class Startup {
 			LogFile.delete();
 		try {
 			FileHandler fh = new FileHandler(LogFile.getAbsolutePath());  
+			fh.setLevel(Level.FINEST);
 		    AbstractGenericEngine.J4RLogger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();  
 	        fh.setFormatter(formatter);  

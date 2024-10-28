@@ -138,7 +138,7 @@ task install(type: Copy) {
 	from jar
 	into "../externallibraries/" + rootProject.name
 	doLast {
-        new File("${installDir}", "j4r_server.bat").text = "java -Xmx8000m -cp ./class;./ext/*;./j4r_server-${project.version}.jar j4r.app.Startup -ports 0 -backdoorport 0:0 -public on"
+        new File("../externallibraries/", "j4r_server.bat").text = "java -Xmx8000m -cp ./class;./ext/*;./j4r_server-${project.version}.jar j4r.app.Startup -ports 0 -backdoorport 0:0 -public on"
     }
 }
 

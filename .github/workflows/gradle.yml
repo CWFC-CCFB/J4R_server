@@ -27,8 +27,10 @@ jobs:
         distribution: zulu
         java-version: ${{ matrix.java }}
     
-    - name: Setup and execute Gradle 'integrationTest' task
+    - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
-      with:
-        arguments: integrationTest
-        
+
+
+    - name: Execute Gradle 'integrationTest' task 
+      run: ./gradlew integrationTest  
+

@@ -11,8 +11,6 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-group = 'org'
-
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(8)
@@ -72,6 +70,7 @@ dependencies {
 compileJava {
 	project.version= gitVersion() 
 	println "Building " + rootProject.name + " " + project.version
+	println "Installation directory " + "../externallibraries/" + rootProject.name
 }
 
 
@@ -81,7 +80,7 @@ test {
 
     // set heap size for the test JVM(s)
     maxHeapSize = "2048m"
-//    exclude '**/ProductionEnvironmentTest.class'
+    exclude '**/ProductionEnvironmentTest.class'
 }
 
 jar {

@@ -11,17 +11,14 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-group = 'org'
-
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(8))
+    languageVersion = JavaLanguageVersion.of(8)
   }
 }
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 
@@ -55,15 +52,25 @@ sourceSets {
     }               
 }
 
+
+configurations {
+	j4rImplementation {
+		extendsFrom implementation
+		description = 'Main implementation'
+		canBeResolved = true
+	}
+}
+
 // make sure to set the compliance to Java 1.8 in the project properties if the Java version is later than 1.8
 // make sure to set Java Compiler > Errors Warnings > Deprecated and Restricted API > Forbidden reference to WARNING instead of ERROR
 dependencies {
-    testImplementation "junit:junit:4.12"    
+    testImplementation "junit:junit:4.13.2"    
 }
 
 compileJava {
 	project.version= gitVersion() 
 	println "Building " + rootProject.name + " " + project.version
+	println "Installation directory " + "../externallibraries/" + rootProject.name
 }
 
 
@@ -73,27 +80,8 @@ test {
 
     // set heap size for the test JVM(s)
     maxHeapSize = "2048m"
-//    exclude '**/ProductionEnvironmentTest.class'
+    exclude '**/ProductionEnvironmentTest.class'
 }
-
-task integrationTest(type: Test) {
-	description = 'Runs the integration tests (unit tests run using the produced JAR file)'
-    group = 'verification'
-	dependsOn jar
-	
-	include '**/*.class'
-	
-	testLogging.showStandardStreams = true
-    testClassesDirs = sourceSets.test.output.classesDirs
-        
-    // set classpath to test classes + test dependencies + JAR
-    classpath = project.sourceSets.test.output + configurations.testRuntimeClasspath + files(jar.archiveFile) 
-    outputs.upToDateWhen { false }
-    mustRunAfter test
-    maxHeapSize = "2048m"
-}
-
-check.dependsOn integrationTest
 
 jar {
 	println "Building standard JAR"
@@ -117,17 +105,38 @@ jar {
 	from sourceSets.main.allJava		
 }
 
-task deleteInstallFolder(type: Delete) {
-  delete "${installDir}"  
+
+task integrationTest(type: Test) {
+	description = 'Runs the integration tests (unit tests run using the produced JAR file)'
+    group = 'verification'
+	dependsOn jar
+	
+	include '**/*.class'
+	
+	testLogging.showStandardStreams = true
+    testClassesDirs = sourceSets.test.output.classesDirs
+        
+    // set classpath to test classes + test dependencies + JAR
+    classpath = project.sourceSets.test.output + configurations.testRuntimeClasspath + files(jar.archiveFile) 
+    outputs.upToDateWhen { false }
+    mustRunAfter test
+    maxHeapSize = "2048m"
 }
 
+check.dependsOn integrationTest
+
+
+task deleteInstallFolder(type: Delete) {
+  delete "../externallibraries/" + rootProject.name
+}
 
 task install(type: Copy) {
 	description = 'Copies the output jar to installation folder.'
 	group = 'build'
-	dependsOn jar,deleteInstallFolder,integrationTest
+	dependsOn deleteInstallFolder,integrationTest
+	from configurations.j4rImplementation
 	from jar
-	into "${installDir}"
+	into "../externallibraries/" + rootProject.name
 	doLast {
         new File("${installDir}", "j4r_server.bat").text = "java -Xmx8000m -cp ./class;./ext/*;./j4r_server-${project.version}.jar j4r.app.Startup -ports 0 -backdoorport 0:0 -public on"
     }

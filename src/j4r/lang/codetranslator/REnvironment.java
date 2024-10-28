@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-import j4r.app.AbstractGenericEngine;
+import j4r.app.Startup;
 import j4r.lang.reflect.ReflectUtility;
 import j4r.net.server.BasicClient;
 
@@ -78,6 +78,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 
 	
+	@SuppressWarnings("rawtypes")
 	static class ExecutableWrapper<P extends Executable> implements Comparable<ExecutableWrapper> {
 
 		final double score; 
@@ -224,7 +225,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	 * @throws Exception
 	 */
 	public Object processCode(String request) throws Exception {
-		AbstractGenericEngine.J4RLogger.log(Level.FINE, "Processing request: " + request);
+		Startup.getMainLogger().log(Level.FINE, "Processing request: " + request);
 		String[] requestStrings = request.split(MainSplitter);
 		if (requestStrings[0].startsWith(ConstructCode)) {	// can be either create, createarray or createnull here
 			return createObjectFromRequestStrings(requestStrings); 
@@ -344,7 +345,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<O
 	}
 
 	
-	@SuppressWarnings({ "rawtypes"})
+	@SuppressWarnings({ "rawtypes", "unchecked"})
 	private Object processField(String[] requestStrings) throws Exception {
 		Class clazz = null;
 		List<ParameterWrapper> wrappers = null;

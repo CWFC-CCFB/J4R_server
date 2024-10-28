@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-import j4r.app.AbstractGenericEngine;
+import j4r.app.Startup;
 import j4r.lang.codetranslator.REnvironment;
 import j4r.net.server.BasicClient.ClientRequest;
 
@@ -172,7 +172,7 @@ public class JavaGatewayServer extends AbstractServer {
 						long startMillisec = Long.parseLong(request.substring(4));
 						long finalTime = System.currentTimeMillis();
 						double elapsedTime =  (finalTime - startMillisec);
-						AbstractGenericEngine.J4RLogger.log(Level.FINE, "Elapsed time single received packet:" + elapsedTime);
+						Startup.getMainLogger().log(Level.FINE, "Elapsed time single received packet:" + elapsedTime);
 					}
 					return this.translator.processCode(request);
 				}

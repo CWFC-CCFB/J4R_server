@@ -135,7 +135,7 @@ public abstract class AbstractGenericEngine {
 		}
 	}
 
-	public static Logger J4RLogger = Logger.getLogger("J4RLogger");
+	protected static final Logger J4RLogger = Logger.getLogger("J4RLogger");
 	
 	protected LinkedBlockingQueue<AbstractGenericTask> queue;
 	protected List<String> tasksDone;
@@ -264,6 +264,7 @@ public abstract class AbstractGenericEngine {
 	 * This method cancels the current task if the queue is not empty.
 	 */
 	public void cancelRunningTask() {
+		J4RLogger.log(Level.INFO, "Cancelling current task...");
 		worker.requestCancel();
 	}
 
@@ -272,6 +273,7 @@ public abstract class AbstractGenericEngine {
 	 * sends the FinalTask static member in the queue in order to ensures the shutting down.
 	 */
 	public void requestShutdown() {
+		J4RLogger.log(Level.INFO, "Requesting shutdown...");
 		queue.clear();
 		addTask(finalTask);
 		try {
